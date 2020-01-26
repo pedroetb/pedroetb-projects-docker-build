@@ -53,28 +53,48 @@ You may define these environment variables (**bold** are mandatory):
 
 * **PACKAGED_IMAGE_NAME**: Name of Docker image to be built (without tag). It will be available at build environment as `<IMAGE_NAME_VARIABLE_NAME>`.
 
-
 * *COMPOSE_ENV_FILE_NAME*: Name of variable definition file, without path. Default `.env`.
+
 * *COMPOSE_FILE_NAME*: Name of image build configuration file, without path. Default `docker-compose.yml`.
+
 * *COMPOSE_PROJECT_DIRECTORY*: Path of directory which contains *docker-compose* configuration. Default `deploy`.
+
 * *DOCKER_BUILD_CONTEXT*: Name of directory which `docker build` will use as context root. Not valid when using `docker-compose build` alternative. Default `.`.
+
 * *DOCKER_BUILD_OPTS*: List of additional *docker build* options, used by both `docker-compose build` and `docker build` alternatives.
+
 * *ENV_PREFIX*: Prefix used to identify variables to be defined in remote environment and service, available there without this prefix. Change this if default value collides with the beginning of your variable names. Default `DBLD_`.
+
 * *ENV_SPACE_REPLACEMENT*: Unique string (change this if that is not true for you) used to replace spaces into variable values while handling them. Default `<dbld-space>`.
+
 * *FORCE_DOCKER_BUILD*: Use always `docker build` alternative instead of `docker-compose build`, even if *docker-compose* configuration is available. Default `0`.
+
 * *IMAGE_NAME_VARIABLE_NAME*: Value used as name of variable which will contain `PACKAGED_IMAGE_NAME` value at build process. Useful only for `docker-compose build` alternative, to use this variable inside *docker-compose* configuration file. Default `IMAGE_NAME`.
+
 * *IMAGE_TAG_VARIABLE_NAME*: Value used as name of variable which will contain `PACKAGED_IMAGE_TAG` value at build process. Useful only for `docker-compose build` alternative, to use this variable inside *docker-compose* configuration file. Default `IMAGE_TAG`.
+
 * *LATEST_TAG_VALUE*: Value used as Docker image tag, representing the most recent version of a Docker image. Default `latest`.
+
 * *OMIT_IMAGE_PUSH*: Cancel image publication to Docker registry after a successful build. Default `0`.
+
 * *OMIT_LATEST_TAG*: Do not tag image as `<LATEST_TAG_VALUE>` after a successful build. Default `0`.
+
 * *PACKAGED_IMAGE_TAG*: Tag of Docker image to be built (representing image version). It will be available at build environment as `<IMAGE_TAG_VARIABLE_NAME>`. Default `latest`.
+
 * *REGISTRY_PASS*: Docker registry password, corresponding to a user with read/write permissions. **Required** to push built images to registry.
+
 * *REGISTRY_URL*: Docker registry address, where Docker must log in to retrieve and publicate images. Default is empty, to use Docker Hub registry.
+
 * *REGISTRY_USER*: Docker registry username, corresponding to a user with read/write permissions. **Required** to push built images to registry.
+
 * *REMOTE_BUILD_PATH*: Path in remote host where building directory (used to hold temporary files) will be created. Only useful when running remote build. Default `~/docker-build`.
+
 * *SSH_CONTROL_PERSIST*: Number of seconds while SSH connection to remote host remain open (useful for short but frequent connections). Default `10`.
+
 * *SSH_KEY*: Private key used to authenticate, paired with a public key accepted by remote host. **Required** to use remote building.
+
 * *SSH_PORT*: Port used for SSH connection to remote host. Default `22`.
+
 * *SSH_REMOTE*: SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally.
 
 ### Your images
