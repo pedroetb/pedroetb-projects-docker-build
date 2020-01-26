@@ -1,0 +1,77 @@
+include:
+  - project: 'pedroetb-projects/gitlab-ci-templates'
+    ref: master
+    file: '/_packaging.yml'
+
+stages:
+  - pre-package
+  - package
+  - post-package
+
+.docker-login-gitlab: &docker-login-gitlab |
+  docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+
+.docker-login-dockerhub: &docker-login-dockerhub |
+  docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_PASS}
+
+.docker-operations:
+  extends: .docker-env
+  variables:
+    PACKAGED_IMAGE_NAME: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}
+    PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHA}
+
+docker-build:
+  extends: .docker-operations
+  stage: package
+  variables:
+    COMPOSE_FILE_NAME: docker-compose.yml
+    COMPOSE_ENV_FILE_NAME: .env
+    COMPOSE_PROJECT_DIRECTORY: '.'
+  script:
+    - *docker-login-gitlab
+    - >
+      COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
+      IMAGE_NAME=${PACKAGED_IMAGE_NAME}
+      IMAGE_TAG=${PACKAGED_IMAGE_TAG}
+      DOCKER_COMPOSE_VERSION=${DOCKER_COMPOSE_VERSION}
+      OPENSSH_CLIENT_VERSION=${OPENSSH_CLIENT_VERSION}
+      docker-compose
+      --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
+      build
+      --pull
+      ${DOCKER_BUILD_ARGS};
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${PACKAGED_IMAGE_NAME}:latest
+    - docker push ${PACKAGED_IMAGE_NAME}
+  only:
+    - branches
+    - tags
+  except:
+    - schedules
+
+.docker-tag:
+  extends: .docker-operations
+  stage: post-package
+  dependencies: []
+  only:
+    - tags
+
+docker-tag-gitlab:
+  extends: .docker-tag
+  script:
+    - *docker-login-gitlab
+    - docker pull ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:latest
+    - docker push ${CI_REGISTRY_IMAGE}
+
+docker-tag-dockerhub:
+  extends: .docker-tag
+  script:
+    - *docker-login-gitlab
+    - *docker-login-dockerhub
+    - docker pull ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
+    - dockerHubImagePath="$(echo ${CI_PROJECT_PATH} | cut -d '/' -f 2- | sed 's/\//-/g')"
+    - dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}"
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:${CI_COMMIT_TAG}
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:latest
+    - docker push ${dockerHubImage}

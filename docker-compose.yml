@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  docker-build:
+    image: ${IMAGE_NAME:-pedroetb/docker-build}:${IMAGE_TAG:-latest}
+    build:
+      context: ${BUILD_CONTEXT:-.}
+      dockerfile: ${DOCKERFILE:-Dockerfile}
+      args:
+        DOCKER_COMPOSE_VERSION:
+        OPENSSH_CLIENT_VERSION:
