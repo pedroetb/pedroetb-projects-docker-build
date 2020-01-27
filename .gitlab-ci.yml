@@ -19,6 +19,7 @@ stages:
   variables:
     PACKAGED_IMAGE_NAME: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}
     PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHA}
+    LATEST_TAG_VALUE: latest
 
 docker-build:
   extends: .docker-operations
@@ -43,7 +44,7 @@ docker-build:
       build
       --pull
       ${DOCKER_BUILD_ARGS};
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${PACKAGED_IMAGE_NAME}:latest
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
     - docker push ${PACKAGED_IMAGE_NAME}
   only:
     - branches
@@ -64,7 +65,7 @@ docker-tag-gitlab:
     - *docker-login-gitlab
     - docker pull ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
     - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:latest
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:${LATEST_TAG_VALUE}
     - docker push ${CI_REGISTRY_IMAGE}
 
 docker-tag-dockerhub:
@@ -76,5 +77,5 @@ docker-tag-dockerhub:
     - dockerHubImagePath="$(echo ${CI_PROJECT_PATH} | cut -d '/' -f 2- | sed 's/\//-/g')"
     - dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}"
     - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:${CI_COMMIT_TAG}
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:latest
+    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:${LATEST_TAG_VALUE}
     - docker push ${dockerHubImage}
