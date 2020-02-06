@@ -4,6 +4,8 @@ Docker building utilities and common actions. Inspired by https://gitlab.com/red
 
 You can use it to build (locally or remotely) your own Docker images, supporting **docker-compose** build configuration and plain **docker build** command.
 
+Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example.
+
 ## Actions
 
 * **build**: Build an image locally or at a remote Docker environment. Contains several stages:
@@ -16,6 +18,16 @@ You can use it to build (locally or remotely) your own Docker images, supporting
 
   * *do-build*: Automatically decide to use `docker-compose build` or `docker build`, launch build process locally or remotely, create predefined image tags, push resultant image to Docker registry, clean temporary resources, etc.
 
+* **tag**: Apply a new tag to an already built Docker image, locally or at a remote Docker environment. Contains several stages:
+
+  * *prepare-registry*: Check variables and apply default values if missing, for Docker registry configuration.
+
+  * *prepare-tag*: Split image names and tags, check variables and apply default values if missing, for Docker tag application.
+
+  * *do-tag*: Login to registries, pull source image, apply new tag and push the result.
+
+* **flatten**: Obtain a single-level Docker image name from a multi-level source. Useful to tag images from GitLab registry (multi-level: *group-name/path/to/project*) to DockerHub (single-level: *username/path-to-project*). The output image name can be retrieved as script result or into `TARGET_IMAGE_NAME` environment variable.
+
 ## Usage
 
 You need to install **Docker** daemon to use this image from your host. Then, you can run it like:
@@ -26,7 +38,7 @@ $ docker run --rm --name docker-build \
 	-v /var/run/docker.sock:/var/run/docker.sock:ro \
 	-v $(pwd):/build \
 	pedroetb/docker-build \
-	build
+	<action> <arg1> <arg2> ...
 ```
 
 Notice the `/build` mountpoint, containing current directory content from your host (where you ran the command). This is the default location where build resources and configuration must be located.
@@ -96,6 +108,48 @@ You may define these environment variables (**bold** are mandatory):
 * *SSH_PORT*: Port used for SSH connection to remote host. Default `22`.
 
 * *SSH_REMOTE*: SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally.
+
+### Docker tag
+
+* **SOURCE_IMAGE**: Identification (`<name:tag>`) of Docker image to use as source. Can be provided as first argument too.
+
+* **TARGET_IMAGE**: Identification (`<name:tag>`) of Docker image to use as target. Can be provided as second argument too.
+
+* *LATEST_TAG_VALUE*: Value used as Docker image tag, representing the most recent version of a Docker image. Default `latest`.
+
+* *OMIT_IMAGE_PUSH*: Cancel image publication to Docker registry after a successful tag. Default `0`.
+
+* *OMIT_LATEST_TAG*: Do not tag image as `<LATEST_TAG_VALUE>` after a successful tag. Default `0`.
+
+* *SOURCE_REGISTRY_PASS*: Docker registry password, corresponding to a user with read permissions at source registry. Default is `<REGISTRY_PASS>`.
+
+* *SOURCE_REGISTRY_URL*: Docker registry address, where Docker must log in to retrieve images. Default is `<REGISTRY_URL>`.
+
+* *SOURCE_REGISTRY_USER*: Docker registry username, corresponding to a user with read permissions at source registry. Default is `<REGISTRY_USER>`.
+
+* *SSH_CONTROL_PERSIST*: Number of seconds while SSH connection to remote host remain open (useful for short but frequent connections). Default `10`.
+
+* *SSH_KEY*: Private key used to authenticate, paired with a public key accepted by remote host. **Required** to use remote building.
+
+* *SSH_PORT*: Port used for SSH connection to remote host. Default `22`.
+
+* *SSH_REMOTE*: SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally.
+
+* *TARGET_REGISTRY_PASS*: Docker registry password, corresponding to a user with read/write permissions at target registry. Default is `<SOURCE_REGISTRY_PASS>`. **Required** to push tagged images to registry.
+
+* *TARGET_REGISTRY_URL*: Docker registry address, where Docker must log in to publicate images. Default is `<SOURCE_REGISTRY_URL>`.
+
+* *TARGET_REGISTRY_USER*: Docker registry username, corresponding to a user with read/write permissions at target registry. Default is `<SOURCE_REGISTRY_USER>`. **Required** to push tagged images to registry.
+
+### Docker flatten
+
+You may define these environment variables (**bold** are mandatory):
+
+* **SOURCE_IMAGE_NAME**: Name of Docker image to flatten (without tag). Can be provided as first argument too.
+
+* *PRESERVE_ROOT_LEVEL*: Keep first segment of image name (portion before first `/`). If `ROOT_NAME` is defined, this portion acts as a prefix for the name; if not, this becomes the `ROOT_NAME`. Default `0`.
+
+* *ROOT_NAME*: Text used to prepend to the flatten image name, separated by `/`. For example, in Docker Hub this typically is the username.
 
 ### Your images
 
@@ -184,3 +238,23 @@ $ docker run --rm --name docker-build \
 	* building `test-image:latest` Docker image from *Dockerfile*
 	* using `docker-compose build` with *docker-compose.yml* configuration
 	* with `VARIABLE_1` and `VARIABLE_2` set
+
+### Flatten and tag (local)
+
+```
+$ docker run --rm --name docker-build \
+	-e SOURCE_IMAGE_NAME=docker/compose \
+	-e PRESERVE_ROOT_LEVEL=1 \
+	-e ROOT_NAME=pedroetb \
+	-v /var/run/docker.sock:/var/run/docker.sock:ro \
+	pedroetb/docker-build \
+	"tag \${SOURCE_IMAGE_NAME}:latest \$(flatten):newtag"
+```
+
+1. To use Docker inside container (needed to tag locally), you must mount `/var/run/docker.sock` from your host.
+2. Start image tagging. In this example:
+	* at localhost
+	* flattening source Docker image name to use as tag target
+	* preserving source root level `docker` and with custom target root name `pedroetb`
+	* tagging `docker/compose:latest` as `pedroetb/docker-compose:newtag`
+	* omitting image push because target Docker registry credentials are not defined
