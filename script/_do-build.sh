@@ -5,11 +5,11 @@ echo -e "\n${INFO_COLOR}Building ${DATA_COLOR}${PACKAGED_IMAGE_NAME}:${PACKAGED_
 latestPackagedImage=${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
 dockerDefaultBuildOpts="--pull --force-rm"
 
-if [ -z "${SSH_REMOTE}" ]
+if [ -z "${SSH_BUILD_REMOTE}" ]
 then
 	cmdPrefix="eval"
 else
-	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_REMOTE}"
+	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
 	buildContextRoot="${REMOTE_BUILD_HOME}"
 fi
 

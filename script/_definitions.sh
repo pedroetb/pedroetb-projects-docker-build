@@ -24,8 +24,8 @@ FAIL_COLOR='\033[0;31m'
 PASS_COLOR='\033[0;32m'
 NULL_COLOR='\033[0m'
 
-SSH_PORT="${SSH_PORT:-22}"
-SSH_CONTROL_PERSIST="${SSH_CONTROL_PERSIST:-10}"
+SSH_BUILD_PORT="${SSH_BUILD_PORT:-22}"
+SSH_BUILD_CONTROL_PERSIST="${SSH_BUILD_CONTROL_PERSIST:-10}"
 SSH_PARAMS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=error \
 	-o "ControlPath=\"/ssh_connection_socket_%h_%p_%r\"" -o ControlMaster=auto \
-	-o ControlPersist=${SSH_CONTROL_PERSIST} -o Port=${SSH_PORT}"
+	-o ControlPersist=${SSH_BUILD_CONTROL_PERSIST} -o Port=${SSH_BUILD_PORT}"

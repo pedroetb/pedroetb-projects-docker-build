@@ -2,11 +2,11 @@
 
 echo -e "\n${INFO_COLOR}Tagging ${DATA_COLOR}${SOURCE_IMAGE}${INFO_COLOR} image ..${NULL_COLOR}\n"
 
-if [ -z "${SSH_REMOTE}" ]
+if [ -z "${SSH_BUILD_REMOTE}" ]
 then
 	cmdPrefix="eval"
 else
-	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_REMOTE}"
+	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
 fi
 
 loginSourceCmd="docker login -u \"${SOURCE_REGISTRY_USER}\" -p \"${SOURCE_REGISTRY_PASS}\" ${SOURCE_REGISTRY_URL}"

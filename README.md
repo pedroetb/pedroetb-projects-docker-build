@@ -101,13 +101,13 @@ You may define these environment variables (**bold** are mandatory):
 
 * *REMOTE_BUILD_PATH*: Path in remote host where building directory (used to hold temporary files) will be created. Only useful when running remote build. Default `~/docker-build`.
 
-* *SSH_CONTROL_PERSIST*: Number of seconds while SSH connection to remote host remain open (useful for short but frequent connections). Default `10`.
+* *SSH_BUILD_CONTROL_PERSIST*: Number of seconds while SSH connection to remote host remain open (useful for short but frequent connections). Default `10`.
 
-* *SSH_KEY*: Private key used to authenticate, paired with a public key accepted by remote host. **Required** to use remote building.
+* *SSH_BUILD_KEY*: Private key used to authenticate, paired with a public key accepted by remote host. **Required** to use remote building.
 
-* *SSH_PORT*: Port used for SSH connection to remote host. Default `22`.
+* *SSH_BUILD_PORT*: Port used for SSH connection to remote host. Default `22`.
 
-* *SSH_REMOTE*: SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally.
+* *SSH_BUILD_REMOTE*: SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally.
 
 ### Docker tag
 
@@ -127,13 +127,13 @@ You may define these environment variables (**bold** are mandatory):
 
 * *SOURCE_REGISTRY_USER*: Docker registry username, corresponding to a user with read permissions at source registry. Default is `<REGISTRY_USER>`.
 
-* *SSH_CONTROL_PERSIST*: Number of seconds while SSH connection to remote host remain open (useful for short but frequent connections). Default `10`.
+* *SSH_BUILD_CONTROL_PERSIST*: Number of seconds while SSH connection to remote host remain open (useful for short but frequent connections). Default `10`.
 
-* *SSH_KEY*: Private key used to authenticate, paired with a public key accepted by remote host. **Required** to use remote building.
+* *SSH_BUILD_KEY*: Private key used to authenticate, paired with a public key accepted by remote host. **Required** to use remote building.
 
-* *SSH_PORT*: Port used for SSH connection to remote host. Default `22`.
+* *SSH_BUILD_PORT*: Port used for SSH connection to remote host. Default `22`.
 
-* *SSH_REMOTE*: SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally.
+* *SSH_BUILD_REMOTE*: SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally.
 
 * *TARGET_REGISTRY_PASS*: Docker registry password, corresponding to a user with read/write permissions at target registry. Default is `<SOURCE_REGISTRY_PASS>`. **Required** to push tagged images to registry.
 
@@ -201,7 +201,7 @@ $ ls -a .
 $ ls -a deploy
 .  ..  docker-compose.yml  .env
 
-$ export SSH_KEY="
+$ export SSH_BUILD_KEY="
 -----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQDozua2ox1gweQ8/889/8ViH/9sI95+/6px1B+IKSJvmf1qLkD4
 3xskMYsWuWmYhfXA8G1gYndTKvEPOB5rfzIT1/bL4jifNqL2cPnRvAvX5u9ddS2b
@@ -220,7 +220,7 @@ sIhl4aG94WSKaj6MdST5Dzt/0qbyJXCThChJbahWToou
 "
 
 $ docker run --rm --name docker-build \
-	-e SSH_REMOTE=user@domain.net -e SSH_KEY \
+	-e SSH_BUILD_REMOTE=user@domain.net -e SSH_BUILD_KEY \
 	-e PACKAGED_IMAGE_NAME=test-image \
 	-e DBLD_VARIABLE_1="variable 1" \
 	-v $(pwd):/build \

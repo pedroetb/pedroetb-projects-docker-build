@@ -4,7 +4,7 @@
 
 . _prepare-registry.sh
 
-if [ -z "${SSH_REMOTE}" ]
+if [ -z "${SSH_BUILD_REMOTE}" ]
 then
 	echo -e "\n${INFO_COLOR}Running Docker build locally ..${NULL_COLOR}"
 else
