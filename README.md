@@ -4,7 +4,7 @@ Docker building utilities and common actions. Inspired by https://gitlab.com/red
 
 You can use it to build (locally or remotely) your own Docker images, supporting **docker-compose** build configuration and plain **docker build** command.
 
-Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example.
+Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example. For remote building, `docker-compose v1.25.0` or greater is required (will fallback to `docker build` if outdated) at remote host.
 
 ## Actions
 

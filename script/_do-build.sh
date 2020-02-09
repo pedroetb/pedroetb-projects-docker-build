@@ -13,6 +13,23 @@ else
 	buildContextRoot="${REMOTE_BUILD_HOME}"
 fi
 
+checkComposeInstalled="command -v docker-compose"
+
+minComposeVersion="1.25.0"
+checkComposeVersion="[ \"\$(printf '%s\n' \"${minComposeVersion}\" \"\$(docker-compose -v | cut -d ' ' -f 3 | cut -d ',' -f 1)\" | sort -V | head -n1)\" = \"${minComposeVersion}\" ]"
+
+if $(echo ${cmdPrefix}) ${checkComposeInstalled}
+then
+	if ! $(echo ${cmdPrefix}) ${checkComposeVersion}
+	then
+		echo -e "${INFO_COLOR}Docker-compose is outdated (< ${minComposeVersion}), forcing 'docker build' ..${NULL_COLOR}"
+		FORCE_DOCKER_BUILD="1"
+	fi
+else
+	echo -e "${INFO_COLOR}Docker-compose is not installed, forcing 'docker build' ..${NULL_COLOR}"
+	FORCE_DOCKER_BUILD="1"
+fi
+
 loginCmd="docker login -u \"${REGISTRY_USER}\" -p \"${REGISTRY_PASS}\" ${REGISTRY_URL}"
 
 buildCmd="\
