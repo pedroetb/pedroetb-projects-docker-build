@@ -13,7 +13,7 @@ else
 	buildContextRoot="${REMOTE_BUILD_HOME}"
 fi
 
-checkComposeInstalled="command -v docker-compose"
+checkComposeInstalled="command -v docker-compose > /dev/null"
 
 minComposeVersion="1.25.0"
 checkComposeVersion="[ \"\$(printf '%s\n' \"${minComposeVersion}\" \"\$(docker-compose -v | cut -d ' ' -f 3 | cut -d ',' -f 1)\" | sort -V | head -n1)\" = \"${minComposeVersion}\" ]"
@@ -28,6 +28,11 @@ then
 else
 	echo -e "${INFO_COLOR}Docker-compose is not installed, forcing 'docker build' ..${NULL_COLOR}"
 	FORCE_DOCKER_BUILD="1"
+fi
+
+if [ ${FORCE_DOCKER_BUILD} -eq 1 ]
+then
+	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}"
 fi
 
 loginCmd="docker login -u \"${REGISTRY_USER}\" -p \"${REGISTRY_PASS}\" ${REGISTRY_URL}"
