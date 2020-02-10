@@ -37,6 +37,16 @@ fi
 
 loginCmd="docker login -u \"${REGISTRY_USER}\" -p \"${REGISTRY_PASS}\" ${REGISTRY_URL}"
 
+logoutCmd="docker logout ${REGISTRY_URL}"
+
+doLogoutCmd() {
+
+	if [ ! -z ${loggedIn} ]
+	then
+		$(echo ${cmdPrefix}) ${logoutCmd}
+	fi
+}
+
 buildCmd="\
 	${buildContextRoot:+cd ${buildContextRoot};} \
 	if [ ${FORCE_DOCKER_BUILD} -eq 0 ] && grep -q \"^\\s\\+build:\$\" ${composeFilePath}; \
@@ -67,7 +77,10 @@ then
 	echo -e "${INFO_COLOR}Docker registry credentials not found, omitting login and image push ..${NULL_COLOR}\n"
 	OMIT_IMAGE_PUSH="1"
 else
-	$(echo ${cmdPrefix}) ${loginCmd}
+	if $(echo ${cmdPrefix}) ${loginCmd}
+	then
+		loggedIn="1"
+	fi
 fi
 
 $(echo ${cmdPrefix}) ${buildCmd}
@@ -80,6 +93,7 @@ then
 	echo -e "\n${PASS_COLOR}Image successfully built!${NULL_COLOR}\n"
 else
 	echo -e "\n${FAIL_COLOR}Image building failed!${NULL_COLOR}\n"
+	doLogoutCmd
 	exit 1
 fi
 
@@ -95,6 +109,9 @@ then
 		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}"
 	else
 		echo -e "\n${FAIL_COLOR}Image push failed!${NULL_COLOR}"
+		doLogoutCmd
 		exit 1
 	fi
 fi
+
+doLogoutCmd
