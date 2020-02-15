@@ -11,6 +11,8 @@ then
 else
 	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
 	buildContextRoot="${REMOTE_BUILD_HOME}"
+	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
+	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
 fi
 
 checkComposeInstalled="command -v docker-compose > /dev/null"
@@ -35,9 +37,11 @@ then
 	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}"
 fi
 
-loginCmd="docker login -u \"${REGISTRY_USER}\" -p \"${REGISTRY_PASS}\" ${REGISTRY_URL}"
+loginCmd="${setDockerConfig} docker login -u \"${REGISTRY_USER}\" -p \"${REGISTRY_PASS}\" ${REGISTRY_URL}"
 
-logoutCmd="docker logout ${REGISTRY_URL}"
+logoutCmd="${setDockerConfig} docker logout ${REGISTRY_URL}"
+
+rmDockerConfigCmd="rm -rf ${dockerConfigPath}"
 
 doLogoutCmd() {
 
@@ -45,10 +49,16 @@ doLogoutCmd() {
 	then
 		$(echo ${cmdPrefix}) ${logoutCmd}
 	fi
+
+	if [ ! -z "${SSH_BUILD_REMOTE}" ]
+	then
+		$(echo ${cmdPrefix}) ${rmDockerConfigCmd}
+	fi
 }
 
 buildCmd="\
 	${buildContextRoot:+cd ${buildContextRoot};} \
+	${setDockerConfig}${setDockerConfig:+;} \
 	if [ ${FORCE_DOCKER_BUILD} -eq 0 ] && grep -q \"^\\s\\+build:\$\" ${composeFilePath}; \
 	then \
 		docker-compose \
@@ -70,7 +80,7 @@ rmCmd="rm -rf ${REMOTE_BUILD_HOME}"
 
 tagCmd="docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${latestPackagedImage}"
 
-pushCmd="docker push ${PACKAGED_IMAGE_NAME}"
+pushCmd="${setDockerConfig} docker push ${PACKAGED_IMAGE_NAME}"
 
 if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
 then
@@ -86,7 +96,10 @@ fi
 $(echo ${cmdPrefix}) ${buildCmd}
 buildCmdExitCode=${?}
 
-$(echo ${cmdPrefix}) ${rmCmd}
+if [ ! -z "${SSH_BUILD_REMOTE}" ]
+then
+	$(echo ${cmdPrefix}) ${rmCmd}
+fi
 
 if [ ${buildCmdExitCode} -eq 0 ]
 then

@@ -7,15 +7,20 @@ then
 	cmdPrefix="eval"
 else
 	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
+	randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
+	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
+	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
 fi
 
-loginSourceCmd="docker login -u \"${SOURCE_REGISTRY_USER}\" -p \"${SOURCE_REGISTRY_PASS}\" ${SOURCE_REGISTRY_URL}"
+loginSourceCmd="${setDockerConfig} docker login -u \"${SOURCE_REGISTRY_USER}\" -p \"${SOURCE_REGISTRY_PASS}\" ${SOURCE_REGISTRY_URL}"
 
-loginTargetCmd="docker login -u \"${TARGET_REGISTRY_USER}\" -p \"${TARGET_REGISTRY_PASS}\" ${TARGET_REGISTRY_URL}"
+loginTargetCmd="${setDockerConfig} docker login -u \"${TARGET_REGISTRY_USER}\" -p \"${TARGET_REGISTRY_PASS}\" ${TARGET_REGISTRY_URL}"
 
-logoutSourceCmd="docker logout ${SOURCE_REGISTRY_URL}"
+logoutSourceCmd="${setDockerConfig} docker logout ${SOURCE_REGISTRY_URL}"
 
-logoutTargetCmd="docker logout ${TARGET_REGISTRY_URL}"
+logoutTargetCmd="${setDockerConfig} docker logout ${TARGET_REGISTRY_URL}"
+
+rmDockerConfigCmd="rm -rf ${dockerConfigPath}"
 
 doLogoutCmd() {
 
@@ -28,15 +33,20 @@ doLogoutCmd() {
 	then
 		$(echo ${cmdPrefix}) ${logoutTargetCmd}
 	fi
+
+	if [ ! -z "${SSH_BUILD_REMOTE}" ]
+	then
+		$(echo ${cmdPrefix}) ${rmDockerConfigCmd}
+	fi
 }
 
-pullCmd="docker pull ${SOURCE_IMAGE}"
+pullCmd="${setDockerConfig} docker pull ${SOURCE_IMAGE}"
 
 tagCmd="docker tag ${SOURCE_IMAGE} ${TARGET_IMAGE}"
 
 tagLatestCmd="docker tag ${SOURCE_IMAGE} ${targetImageName}:${LATEST_TAG_VALUE}"
 
-pushCmd="docker push ${targetImageName}"
+pushCmd="${setDockerConfig} docker push ${targetImageName}"
 
 if [ ! -z "${SOURCE_REGISTRY_USER}" ] && [ ! -z "${SOURCE_REGISTRY_PASS}" ]
 then

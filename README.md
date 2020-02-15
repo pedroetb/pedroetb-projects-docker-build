@@ -121,6 +121,8 @@ You may define these environment variables (**bold** are mandatory):
 
 * *OMIT_LATEST_TAG*: Do not tag image as `<LATEST_TAG_VALUE>` after a successful tag. Default `0`.
 
+* *REMOTE_BUILD_PATH*: Path in remote host where tagging directory (used to hold temporary files) will be created. Only useful when running remote build. Default `~/docker-build`.
+
 * *SOURCE_REGISTRY_PASS*: Docker registry password, corresponding to a user with read permissions at source registry. Default is `<REGISTRY_PASS>`.
 
 * *SOURCE_REGISTRY_URL*: Docker registry address, where Docker must log in to retrieve images. Default is `<REGISTRY_URL>`.
