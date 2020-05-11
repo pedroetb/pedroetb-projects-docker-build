@@ -6,7 +6,9 @@ then
 	COMPOSE_PROJECT_DIRECTORY=""
 fi
 
-composeFilePath="${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+/}${COMPOSE_FILE_NAME}"
+composeFileNameExpanded=$(echo ${COMPOSE_FILE_NAME} | sed "s/:/:${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+\/}/g")
+composeFilePath="${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+/}${composeFileNameExpanded}"
+
 envFilePath="${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+/}${COMPOSE_ENV_FILE_NAME}"
 
 echo -e "\n${INFO_COLOR}Setting environment variables to local and remote environments ..${NULL_COLOR}"

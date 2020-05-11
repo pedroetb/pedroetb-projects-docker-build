@@ -32,20 +32,20 @@ Support remote actions, connecting through SSH to other machines. This is useful
 
 You need to install **Docker** daemon to use this image from your host. Then, you can run it like:
 
-```
-$ docker run --rm --name docker-build \
-	-e PACKAGED_IMAGE_NAME=test-image \
-	-v /var/run/docker.sock:/var/run/docker.sock:ro \
-	-v $(pwd):/build \
-	pedroetb/docker-build \
-	<action> <arg1> <arg2> ...
+```sh
+docker run --rm --name docker-build \
+ -e PACKAGED_IMAGE_NAME=test-image \
+ -v /var/run/docker.sock:/var/run/docker.sock:ro \
+ -v $(pwd):/build \
+ pedroetb/docker-build \
+ <action> <arg1> <arg2> ...
 ```
 
 Notice the `/build` mountpoint, containing current directory content from your host (where you ran the command). This is the default location where build resources and configuration must be located.
 
 Also, Docker socket must be mounted to access local Docker daemon (needed to build locally).
 
-Configuration is possible through environment variables and by script (<action>) parameters.
+Configuration is possible through environment variables and by script (`<action>`) parameters.
 
 Using environment variables, you can configure:
 
@@ -67,7 +67,7 @@ You may define these environment variables (**bold** are mandatory):
 
 * *COMPOSE_ENV_FILE_NAME*: Name of variable definition file, without path. Default `.env`.
 
-* *COMPOSE_FILE_NAME*: Name of image build configuration file, without path. Default `docker-compose.yml`.
+* *COMPOSE_FILE_NAME*: Name of image build configuration file, without path. Support multiple files, separated by `:`. Default `docker-compose.yml`.
 
 * *COMPOSE_PROJECT_DIRECTORY*: Path of directory which contains *docker-compose* configuration. Default `deploy`.
 
@@ -158,18 +158,20 @@ You may define these environment variables (**bold** are mandatory):
 When using *build* action, you can configure your own image arguments through variables:
 
 * Define any variable whose name is prefixed by `ENV_PREFIX` prefix:
-	1. Set variable `docker run ... -e DBLD_ANY_NAME=value ... build`.
-	2. `ANY_NAME` will be set into image as argument with `value` value.
+
+ 1. Set variable `docker run ... -e DBLD_ANY_NAME=value ... build`.
+ 2. `ANY_NAME` will be set into image as argument with `value` value.
 
 * Pass any variable as build script parameter (without `ENV_PREFIX` prefix):
-	1. Set parameter to build script: `docker run ... build ANY_NAME=value`.
-	2. `ANY_NAME` will be set into image as argument with `value` value.
+
+ 1. Set parameter to build script: `docker run ... build ANY_NAME=value`.
+ 2. `ANY_NAME` will be set into image as argument with `value` value.
 
 ## Examples
 
 ### Build (local)
 
-```
+```sh
 $ ls -a .
 .  ..  deploy Dockerfile
 
@@ -177,12 +179,12 @@ $ ls -a deploy
 .  ..  docker-compose.yml  .env
 
 $ docker run --rm --name docker-build \
-	-e PACKAGED_IMAGE_NAME=test-image \
-	-e DBLD_VARIABLE_1="variable 1" \
-	-v /var/run/docker.sock:/var/run/docker.sock:ro \
-	-v $(pwd):/build \
-	pedroetb/docker-build \
-	build VARIABLE_2="variable 2"
+ -e PACKAGED_IMAGE_NAME=test-image \
+ -e DBLD_VARIABLE_1="variable 1" \
+ -v /var/run/docker.sock:/var/run/docker.sock:ro \
+ -v $(pwd):/build \
+ pedroetb/docker-build \
+ build VARIABLE_2="variable 2"
 ```
 
 1. You must define a Docker image to built, at Dockerfile file.
@@ -196,7 +198,7 @@ $ docker run --rm --name docker-build \
 
 ### Build (remote)
 
-```
+```sh
 $ ls -a .
 .  ..  deploy Dockerfile
 
@@ -222,12 +224,12 @@ sIhl4aG94WSKaj6MdST5Dzt/0qbyJXCThChJbahWToou
 "
 
 $ docker run --rm --name docker-build \
-	-e SSH_BUILD_REMOTE=user@domain.net -e SSH_BUILD_KEY \
-	-e PACKAGED_IMAGE_NAME=test-image \
-	-e DBLD_VARIABLE_1="variable 1" \
-	-v $(pwd):/build \
-	pedroetb/docker-build \
-	build VARIABLE_2="variable 2"
+ -e SSH_BUILD_REMOTE=user@domain.net -e SSH_BUILD_KEY \
+ -e PACKAGED_IMAGE_NAME=test-image \
+ -e DBLD_VARIABLE_1="variable 1" \
+ -v $(pwd):/build \
+ pedroetb/docker-build \
+ build VARIABLE_2="variable 2"
 ```
 
 1. You must define a Docker image to built, at Dockerfile file.
@@ -243,14 +245,14 @@ $ docker run --rm --name docker-build \
 
 ### Flatten and tag (local)
 
-```
+```sh
 $ docker run --rm --name docker-build \
-	-e SOURCE_IMAGE_NAME=docker/compose \
-	-e PRESERVE_ROOT_LEVEL=1 \
-	-e ROOT_NAME=pedroetb \
-	-v /var/run/docker.sock:/var/run/docker.sock:ro \
-	pedroetb/docker-build \
-	"tag \${SOURCE_IMAGE_NAME}:latest \$(flatten):newtag"
+ -e SOURCE_IMAGE_NAME=docker/compose \
+ -e PRESERVE_ROOT_LEVEL=1 \
+ -e ROOT_NAME=pedroetb \
+ -v /var/run/docker.sock:/var/run/docker.sock:ro \
+ pedroetb/docker-build \
+ "tag \${SOURCE_IMAGE_NAME}:latest \$(flatten):newtag"
 ```
 
 1. To use Docker inside container (needed to tag locally), you must mount `/var/run/docker.sock` from your host.
