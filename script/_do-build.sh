@@ -59,7 +59,7 @@ doLogoutCmd() {
 buildCmd="\
 	${buildContextRoot:+cd ${buildContextRoot};} \
 	${setDockerConfig}${setDockerConfig:+;} \
-	if [ ${FORCE_DOCKER_BUILD} -eq 0 ] && grep -q \"^\\s\\+build:\$\" ${composeFilePath}; \
+	if [ ${FORCE_DOCKER_BUILD} -eq 0 ]; \
 	then \
 		docker-compose \
 			--env-file ${envFilePath} \
