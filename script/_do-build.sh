@@ -65,7 +65,8 @@ buildCmd="\
 			--env-file ${envFilePath} \
 			build \
 			${dockerDefaultBuildOpts} \
-			${DOCKER_BUILD_OPTS}; \
+			${DOCKER_BUILD_OPTS} \
+			${BUILD_SERVICE_NAME}; \
 	else \
 		docker pull ${latestPackagedImage}; \
 		docker build \

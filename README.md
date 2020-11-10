@@ -65,6 +65,8 @@ You may define these environment variables (**bold** are mandatory):
 
 * **PACKAGED_IMAGE_NAME**: Name of Docker image to be built (without tag). It will be available at build environment as `<IMAGE_NAME_VARIABLE_NAME>`.
 
+* *BUILD_SERVICE_NAME*: Name of service (among those defined into docker-compose config) to be built. Default is empty, to build all services found (although tagging and pushing only accept one image at a time).
+
 * *COMPOSE_ENV_FILE_NAME*: Name of variable definition file, without path. Default `.env`.
 
 * *COMPOSE_FILE_NAME*: Name of image build configuration file, without path. Support multiple files, separated by `:`. Default `docker-compose.yml`.
