@@ -81,7 +81,9 @@ rmCmd="rm -rf ${REMOTE_BUILD_HOME}"
 
 tagCmd="docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${latestPackagedImage}"
 
-pushCmd="${setDockerConfig} docker push ${PACKAGED_IMAGE_NAME}"
+pushOriginalTagCmd="${setDockerConfig} docker push ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}"
+pushLatestTagCmd="${setDockerConfig} docker push ${latestPackagedImage}"
+pushCmd="${pushOriginalTagCmd} && ${pushLatestTagCmd}"
 
 if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
 then
