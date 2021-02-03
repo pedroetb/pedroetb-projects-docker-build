@@ -43,10 +43,11 @@ doLogoutCmd() {
 pullCmd="${setDockerConfig} docker pull ${SOURCE_IMAGE}"
 
 tagCmd="docker tag ${SOURCE_IMAGE} ${TARGET_IMAGE}"
-
 tagLatestCmd="docker tag ${SOURCE_IMAGE} ${targetImageName}:${LATEST_TAG_VALUE}"
 
-pushCmd="${setDockerConfig} docker push ${targetImageName}"
+pushOriginalTagCmd="${setDockerConfig} docker push ${TARGET_IMAGE}"
+pushLatestTagCmd="${setDockerConfig} docker push ${targetImageName}:${LATEST_TAG_VALUE}"
+pushCmd="${pushOriginalTagCmd}"
 
 if [ ! -z "${SOURCE_REGISTRY_USER}" ] && [ ! -z "${SOURCE_REGISTRY_PASS}" ]
 then
@@ -76,6 +77,8 @@ fi
 
 if [ ${OMIT_LATEST_TAG} -eq 0 ]
 then
+	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
+
 	if $(echo ${cmdPrefix}) ${tagLatestCmd}
 	then
 		echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${LATEST_TAG_VALUE}${NULL_COLOR}\n"
