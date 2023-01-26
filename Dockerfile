@@ -1,9 +1,9 @@
-ARG DOCKER_COMPOSE_VERSION=1.25.1
+ARG DOCKER_COMPOSE_VERSION
 FROM docker/compose:${DOCKER_COMPOSE_VERSION}
 
 LABEL maintainer="pedroetb@gmail.com"
 
-ARG OPENSSH_CLIENT_VERSION=8.1_p1-r0
+ARG OPENSSH_CLIENT_VERSION
 RUN apk --update --no-cache add \
 	openssh-client=${OPENSSH_CLIENT_VERSION}
 
