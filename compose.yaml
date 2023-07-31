@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   docker-build:
     image: ${IMAGE_NAME:-pedroetb/docker-build}:${IMAGE_TAG:-latest}
