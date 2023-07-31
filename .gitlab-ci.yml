@@ -28,7 +28,7 @@ docker-build:
   variables:
     PACKAGING_IMAGE_NAME: docker/compose
     PACKAGING_IMAGE_TAG: latest
-    COMPOSE_FILE_NAME: docker-compose.yml
+    COMPOSE_FILE_NAME: compose.yaml
     COMPOSE_ENV_FILE_NAME: .env
     COMPOSE_PROJECT_DIRECTORY: '.'
   script:
