@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   docker-build:
     image: ${IMAGE_NAME:-pedroetb/docker-build}:${IMAGE_TAG:-latest}
@@ -7,5 +5,5 @@ services:
       context: ${BUILD_CONTEXT:-.}
       dockerfile: ${DOCKERFILE:-Dockerfile}
       args:
-        DOCKER_COMPOSE_VERSION:
-        OPENSSH_CLIENT_VERSION:
+        DOCKER_VERSION:
+        OPENSSH_VERSION:

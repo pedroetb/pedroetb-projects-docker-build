@@ -26,7 +26,7 @@ docker-build:
   stage: package
   image: ${PACKAGING_IMAGE_NAME}:${PACKAGING_IMAGE_TAG}
   variables:
-    PACKAGING_IMAGE_NAME: docker/compose
+    PACKAGING_IMAGE_NAME: docker
     PACKAGING_IMAGE_TAG: latest
     COMPOSE_FILE_NAME: compose.yaml
     COMPOSE_ENV_FILE_NAME: .env
@@ -37,11 +37,11 @@ docker-build:
       COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
       IMAGE_NAME=${PACKAGED_IMAGE_NAME}
       IMAGE_TAG=${PACKAGED_IMAGE_TAG}
-      docker-compose
-      --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
+      docker compose
+        --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
       build
-      --pull
-      ${DOCKER_BUILD_ARGS};
+        --pull
+        ${DOCKER_BUILD_ARGS};
     - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
     - docker push ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
     - docker push ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
