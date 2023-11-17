@@ -3,15 +3,15 @@
 echo -e "\n${INFO_COLOR}Preparing build configuration and resources ..${NULL_COLOR}"
 
 randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
-REMOTE_BUILD_HOME="${REMOTE_BUILD_PATH}/${randomValue}"
+remoteBuildHome="${REMOTE_BUILD_PATH}/${randomValue}"
 
 echo -e "\n${INFO_COLOR}Sending building resources to remote ${DATA_COLOR}${remoteHost}${INFO_COLOR} ..${NULL_COLOR}"
-echo -e "  ${INFO_COLOR}building path [ ${DATA_COLOR}${REMOTE_BUILD_HOME}${INFO_COLOR} ]${NULL_COLOR}\n"
+echo -e "  ${INFO_COLOR}building path [ ${DATA_COLOR}${remoteBuildHome}${INFO_COLOR} ]${NULL_COLOR}\n"
 
 # Create directory to hold build configuration files
-if ! ssh ${SSH_PARAMS} "${SSH_BUILD_REMOTE}" "mkdir -p ${REMOTE_BUILD_HOME}"
+if ! ssh ${SSH_PARAMS} "${SSH_BUILD_REMOTE}" "mkdir -p ${remoteBuildHome}"
 then
-	echo -e "${FAIL_COLOR}Building path ${DATA_COLOR}${REMOTE_BUILD_HOME}${FAIL_COLOR} creation failed!${NULL_COLOR}"
+	echo -e "${FAIL_COLOR}Building path ${DATA_COLOR}${remoteBuildHome}${FAIL_COLOR} creation failed!${NULL_COLOR}"
 	exit 1
 fi
 

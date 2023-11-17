@@ -7,3 +7,4 @@ services:
       args:
         DOCKER_VERSION:
         OPENSSH_VERSION:
+        VERSION:

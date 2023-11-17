@@ -11,7 +11,7 @@ composeFilePath="${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+/}${co
 
 envFilePath="${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+/}${COMPOSE_ENV_FILE_NAME}"
 
-echo -e "\n${INFO_COLOR}Setting environment variables to local and remote environments ..${NULL_COLOR}"
+echo -e "\n${INFO_COLOR}Setting environment variables to local and build target host environments ..${NULL_COLOR}"
 echo -en "  ${INFO_COLOR}variable names [ ${DATA_COLOR}COMPOSE_FILE${INFO_COLOR}"
 
 envDefs="COMPOSE_FILE=${composeFilePath}"

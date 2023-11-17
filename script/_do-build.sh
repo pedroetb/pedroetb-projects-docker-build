@@ -10,26 +10,26 @@ then
 	cmdPrefix="eval"
 else
 	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
-	buildContextRoot="${REMOTE_BUILD_HOME}"
+	buildContextRoot="${remoteBuildHome}"
 	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
-fi
 
-checkComposeInstalled="command -v docker-compose > /dev/null"
+	checkDockerInstalled="command -v docker > /dev/null"
+	minDockerMajorVersion="23"
+	checkDockerVersion="[ \$(docker --version | sed -r 's/.* ([0-9]+)\..*/\1/g') -ge ${minDockerMajorVersion} ]"
 
-minComposeVersion="1.25.0"
-checkComposeVersion="[ \"\$(printf '%s\n' \"${minComposeVersion}\" \"\$(docker-compose -v | cut -d ' ' -f 3 | cut -d ',' -f 1)\" | sort -V | head -n1)\" = \"${minComposeVersion}\" ]"
-
-if $(echo ${cmdPrefix}) ${checkComposeInstalled}
-then
-	if ! $(echo ${cmdPrefix}) ${checkComposeVersion}
+	if ! $(echo ${cmdPrefix}) ${checkDockerInstalled}
 	then
-		echo -e "${INFO_COLOR}Docker-compose is outdated (< ${minComposeVersion}), forcing 'docker build' ..${NULL_COLOR}"
+		echo -e "${FAIL_COLOR}Docker is not available at build target host environment!${NULL_COLOR}"
+		eval "${closeSshCmd}"
+		exit 1
+	fi
+
+	if ! $(echo ${cmdPrefix}) ${checkDockerVersion}
+	then
+		echo -e "${INFO_COLOR}Docker is outdated (< v${minDockerMajorVersion}), forcing 'docker build' ..${NULL_COLOR}"
 		FORCE_DOCKER_BUILD="1"
 	fi
-else
-	echo -e "${INFO_COLOR}Docker-compose is not installed, forcing 'docker build' ..${NULL_COLOR}"
-	FORCE_DOCKER_BUILD="1"
 fi
 
 if [ ${FORCE_DOCKER_BUILD} -eq 1 ]
@@ -53,6 +53,7 @@ doLogoutCmd() {
 	if [ ! -z "${SSH_BUILD_REMOTE}" ]
 	then
 		$(echo ${cmdPrefix}) ${rmDockerConfigCmd}
+		eval "${closeSshCmd}"
 	fi
 }
 
@@ -61,7 +62,7 @@ buildCmd="\
 	${setDockerConfig}${setDockerConfig:+;} \
 	if [ ${FORCE_DOCKER_BUILD} -eq 0 ]; \
 	then \
-		docker-compose \
+		docker compose \
 			--env-file ${envFilePath} \
 			build \
 			${dockerDefaultBuildOpts} \
@@ -77,7 +78,7 @@ buildCmd="\
 			${buildContextRoot}${buildContextRoot:+/}${DOCKER_BUILD_CONTEXT}; \
 	fi"
 
-rmCmd="rm -rf ${REMOTE_BUILD_HOME}"
+rmCmd="rm -rf ${remoteBuildHome}"
 
 tagCmd="docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${latestPackagedImage}"
 

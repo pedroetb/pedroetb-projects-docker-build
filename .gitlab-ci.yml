@@ -31,6 +31,8 @@ docker-build:
     COMPOSE_FILE_NAME: compose.yaml
     COMPOSE_ENV_FILE_NAME: .env
     COMPOSE_PROJECT_DIRECTORY: '.'
+  before_script:
+    - export VERSION=${CI_COMMIT_TAG:-${CI_COMMIT_SHORT_SHA}};
   script:
     - *docker-login-gitlab
     - >

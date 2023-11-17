@@ -37,6 +37,7 @@ doLogoutCmd() {
 	if [ ! -z "${SSH_BUILD_REMOTE}" ]
 	then
 		$(echo ${cmdPrefix}) ${rmDockerConfigCmd}
+		eval "${closeSshCmd}"
 	fi
 }
 

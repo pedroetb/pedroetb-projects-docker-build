@@ -1,8 +1,8 @@
 #!/bin/sh
 
-COMPOSE_FILE_NAME="${COMPOSE_FILE_NAME:-docker-compose.yml}"
+COMPOSE_FILE_NAME="${COMPOSE_FILE_NAME:-compose.yaml}"
 COMPOSE_ENV_FILE_NAME="${COMPOSE_ENV_FILE_NAME:-.env}"
-COMPOSE_PROJECT_DIRECTORY="${COMPOSE_PROJECT_DIRECTORY:-deploy}"
+COMPOSE_PROJECT_DIRECTORY="${COMPOSE_PROJECT_DIRECTORY:-build}"
 
 ENV_PREFIX="${ENV_PREFIX:-DBLD_}"
 ENV_SPACE_REPLACEMENT="${ENV_SPACE_REPLACEMENT:-<dbld-space>}"
@@ -29,3 +29,5 @@ SSH_BUILD_CONTROL_PERSIST="${SSH_BUILD_CONTROL_PERSIST:-10}"
 SSH_PARAMS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=error \
 	-o "ControlPath=\"/ssh_connection_socket_%h_%p_%r\"" -o ControlMaster=auto \
 	-o ControlPersist=${SSH_BUILD_CONTROL_PERSIST} -o Port=${SSH_BUILD_PORT}"
+
+echo -e "${INFO_COLOR}*** Docker build [ ${DATA_COLOR}${VERSION}${INFO_COLOR} ] ***${NULL_COLOR}\n"

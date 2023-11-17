@@ -3,7 +3,10 @@ FROM docker:${DOCKER_VERSION}
 
 LABEL maintainer="pedroetb@gmail.com"
 
-ARG OPENSSH_VERSION
+ARG VERSION OPENSSH_VERSION
+ENV VERSION=${VERSION}
+LABEL version=${VERSION}
+
 RUN apk --update --no-cache add \
 	openssh-client-default="${OPENSSH_VERSION}"
 
