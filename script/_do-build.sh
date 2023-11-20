@@ -10,21 +10,13 @@ then
 	cmdPrefix="eval"
 else
 	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
+
 	buildContextRoot="${remoteBuildHome}"
 	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
 
-	checkDockerInstalled="command -v docker > /dev/null"
 	minDockerMajorVersion="23"
 	checkDockerVersion="[ \$(docker --version | sed -r 's/.* ([0-9]+)\..*/\1/g') -ge ${minDockerMajorVersion} ]"
-
-	if ! $(echo ${cmdPrefix}) ${checkDockerInstalled}
-	then
-		echo -e "${FAIL_COLOR}Docker is not available at build target host environment!${NULL_COLOR}"
-		eval "${closeSshCmd}"
-		eval "${removeBuildEnvFile}"
-		exit 1
-	fi
 
 	if ! $(echo ${cmdPrefix}) ${checkDockerVersion}
 	then

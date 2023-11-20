@@ -2,6 +2,15 @@
 
 echo -e "\n${INFO_COLOR}Preparing build configuration and resources ..${NULL_COLOR}"
 
+checkDockerInstalled="command -v docker > /dev/null"
+if ! ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE} ${checkDockerInstalled}
+then
+	echo -e "\n${FAIL_COLOR}Docker is not available at build target host environment!${NULL_COLOR}"
+	eval "${closeSshCmd}"
+	eval "${removeBuildEnvFile}"
+	exit 1
+fi
+
 randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
 remoteBuildHome="${REMOTE_BUILD_PATH}/${randomValue}"
 
