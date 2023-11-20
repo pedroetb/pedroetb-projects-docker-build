@@ -10,6 +10,14 @@ composeFileNameExpanded=$(echo ${COMPOSE_FILE_NAME} | sed "s#:#:${COMPOSE_PROJEC
 composeFilePath="${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+/}${composeFileNameExpanded}"
 
 envFilePath="${COMPOSE_PROJECT_DIRECTORY}${COMPOSE_PROJECT_DIRECTORY:+/}${COMPOSE_ENV_FILE_NAME}"
+envBuildFilePath="${envFilePath}-build"
+if [ -f "${envFilePath}" ]
+then
+	cp -a "${envFilePath}" "${envBuildFilePath}"
+else
+	touch "${envBuildFilePath}"
+fi
+removeBuildEnvFile="rm ${envBuildFilePath}"
 
 echo -e "\n${INFO_COLOR}Setting environment variables to local and build target host environments ..${NULL_COLOR}"
 echo -en "  ${INFO_COLOR}variable names [ ${DATA_COLOR}COMPOSE_FILE${INFO_COLOR}"
@@ -43,4 +51,4 @@ done
 echo -e " ]${NULL_COLOR}"
 
 # Set .env file with collected environment variables
-echo -e ${envDefs} >> "${envFilePath}"
+echo -e ${envDefs} >> "${envBuildFilePath}"

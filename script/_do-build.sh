@@ -22,19 +22,20 @@ else
 	then
 		echo -e "${FAIL_COLOR}Docker is not available at build target host environment!${NULL_COLOR}"
 		eval "${closeSshCmd}"
+		eval "${removeBuildEnvFile}"
 		exit 1
 	fi
 
 	if ! $(echo ${cmdPrefix}) ${checkDockerVersion}
 	then
-		echo -e "${INFO_COLOR}Docker is outdated (< v${minDockerMajorVersion}), forcing 'docker build' ..${NULL_COLOR}"
+		echo -e "${INFO_COLOR}Docker is outdated (< v${minDockerMajorVersion}), forcing 'docker build' ..${NULL_COLOR}\n"
 		FORCE_DOCKER_BUILD="1"
 	fi
 fi
 
 if [ ${FORCE_DOCKER_BUILD} -eq 1 ]
 then
-	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}"
+	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}\n"
 fi
 
 loginCmd="${setDockerConfig} docker login -u \"${REGISTRY_USER}\" -p \"${REGISTRY_PASS}\" ${REGISTRY_URL}"
@@ -55,6 +56,8 @@ doLogoutCmd() {
 		$(echo ${cmdPrefix}) ${rmDockerConfigCmd}
 		eval "${closeSshCmd}"
 	fi
+
+	eval "${removeBuildEnvFile}"
 }
 
 buildCmd="\
@@ -63,7 +66,7 @@ buildCmd="\
 	if [ ${FORCE_DOCKER_BUILD} -eq 0 ]; \
 	then \
 		docker compose \
-			--env-file ${envFilePath} \
+			--env-file ${envBuildFilePath} \
 			build \
 			${dockerDefaultBuildOpts} \
 			${DOCKER_BUILD_OPTS} \

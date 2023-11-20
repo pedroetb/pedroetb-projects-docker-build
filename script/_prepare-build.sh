@@ -12,6 +12,7 @@ echo -e "  ${INFO_COLOR}building path [ ${DATA_COLOR}${remoteBuildHome}${INFO_CO
 if ! ssh ${SSH_PARAMS} "${SSH_BUILD_REMOTE}" "mkdir -p ${remoteBuildHome}"
 then
 	echo -e "${FAIL_COLOR}Building path ${DATA_COLOR}${remoteBuildHome}${FAIL_COLOR} creation failed!${NULL_COLOR}"
+	eval "${removeBuildEnvFile}"
 	exit 1
 fi
 
@@ -22,7 +23,6 @@ then
 	echo -e "${PASS_COLOR}Building resources successfully sent!${NULL_COLOR}"
 else
 	echo -e "${FAIL_COLOR}Building resources sending failed!${NULL_COLOR}"
+	eval "${removeBuildEnvFile}"
 	exit 1
 fi
-
-sleep 30

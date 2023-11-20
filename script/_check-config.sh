@@ -14,8 +14,9 @@ do
 			anyBuildConfigFound=1
 		fi
 	else
-		echo -e "${DATA_COLOR}${composeFilePathItem}${INFO_COLOR} not found.${NULL_COLOR}"
+		echo -e "File ${DATA_COLOR}${composeFilePathItem}${INFO_COLOR} not found.${NULL_COLOR}\n"
 		anyComposeMissing=1
+		break
 	fi
 done
 
@@ -24,11 +25,12 @@ then
 	echo -e "${INFO_COLOR}Compose build configuration not found, omitting check ..${NULL_COLOR}"
 	FORCE_DOCKER_BUILD=1
 else
-	if docker compose --env-file "./${envFilePath}" config -q
+	if docker compose --env-file "./${envBuildFilePath}" config -q
 	then
 		echo -e "${PASS_COLOR}Valid compose configuration!${NULL_COLOR}"
 	else
 		echo -e "${FAIL_COLOR}Invalid compose configuration!${NULL_COLOR}"
+		eval "${removeBuildEnvFile}"
 		exit 1
 	fi
 fi
