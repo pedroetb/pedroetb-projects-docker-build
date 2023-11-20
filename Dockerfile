@@ -1,16 +1,20 @@
 ARG DOCKER_VERSION
+
 FROM docker:${DOCKER_VERSION}
 
 LABEL maintainer="pedroetb@gmail.com"
 
-ARG VERSION OPENSSH_VERSION
-ENV VERSION=${VERSION}
-LABEL version=${VERSION}
+WORKDIR /build
+
+ENTRYPOINT ["/bin/sh", "-c"]
+
+ARG OPENSSH_VERSION
 
 RUN apk --update --no-cache add \
 	openssh-client-default="${OPENSSH_VERSION}"
 
 COPY script/ /script/
+
 RUN \
 	binPath=/usr/bin; \
 	for filePath in /script/*; \
@@ -20,6 +24,8 @@ RUN \
 		ln -s "${filePath}" "${binPath}/${fileName%.*}"; \
 	done
 
-WORKDIR /build
+ARG VERSION
 
-ENTRYPOINT ["/bin/sh", "-c"]
+LABEL version="${VERSION}"
+
+RUN echo "${VERSION}" > /version

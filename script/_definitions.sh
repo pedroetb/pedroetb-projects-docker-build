@@ -30,4 +30,5 @@ SSH_PARAMS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLe
 	-o "ControlPath=\"/ssh_connection_socket_%h_%p_%r\"" -o ControlMaster=auto \
 	-o ControlPersist=${SSH_BUILD_CONTROL_PERSIST} -o Port=${SSH_BUILD_PORT}"
 
-echo -e "${INFO_COLOR}*** Docker build [ ${DATA_COLOR}${VERSION}${INFO_COLOR} ] ***${NULL_COLOR}\n"
+version=$(cat /version)
+echo -e "${INFO_COLOR}*** Docker build [ ${DATA_COLOR}${version}${INFO_COLOR} ] ***${NULL_COLOR}\n"
