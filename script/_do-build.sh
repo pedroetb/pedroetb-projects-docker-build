@@ -76,6 +76,7 @@ buildCmd="\
 		docker pull ${dockerPushPullOpts} ${latestPackagedImage}; \
 		docker build \
 			--cache-from ${latestPackagedImage} \
+			-f ${DOCKERFILE_PATH} \
 			${dockerDefaultBuildOpts} \
 			${DOCKER_BUILD_OPTS} \
 			-t ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} \

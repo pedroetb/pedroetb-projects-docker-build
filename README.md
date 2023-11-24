@@ -64,6 +64,7 @@ You may define these environment variables (**bold** are mandatory):
 | *DOCKER_BUILD_CONTEXT* | `.` | Name of directory which `docker build` will use as context root. Not valid when using `docker compose build` alternative. |
 | *DOCKER_BUILD_OPTS* | - | List of additional *docker build* options, used by both `docker compose build` and `docker build` alternatives. |
 | *DOCKER_VERBOSE* | `0` | Show full output of Docker operations (`build`, `pull` and `push`) when enabled. |
+| *DOCKERFILE_PATH* | `Dockerfile` | Path of `Dockerfile` file, relative to your project directories. Not valid when using `docker compose build` alternative. |
 | *ENV_PREFIX* | `DBLD_` | Prefix used to identify variables to be defined in remote environment and service, available there without this prefix. Change this if default value collides with the beginning of your variable names. |
 | *ENV_SPACE_REPLACEMENT* | `<dbld-space>` | Unique string (change this if that is not true for you) used to replace spaces into variable values while handling them. |
 | *FORCE_DOCKER_BUILD* | `0` | Use always `docker build` alternative instead of `docker compose build`, even if *compose* configuration is available. |
