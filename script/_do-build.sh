@@ -22,7 +22,7 @@ else
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
 fi
 
-getDockerVersion="docker version --format '{{.Client.Version}}'"
+getDockerVersion="docker version --format '{{.Server.Version}}'"
 dockerVersion=$($(echo ${cmdPrefix}) ${getDockerVersion})
 
 minDockerMajorVersion="23"
