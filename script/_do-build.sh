@@ -14,15 +14,18 @@ else
 	buildContextRoot="${remoteBuildHome}"
 	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
+fi
 
-	minDockerMajorVersion="23"
-	checkDockerVersion="[ \$(docker --version | sed -r 's/.* ([0-9]+)\..*/\1/g') -ge ${minDockerMajorVersion} ]"
+getDockerVersion="docker version --format '{{.Client.Version}}'"
+dockerVersion=$($(echo ${cmdPrefix}) ${getDockerVersion})
 
-	if ! $(echo ${cmdPrefix}) ${checkDockerVersion}
-	then
-		echo -e "${INFO_COLOR}Docker is outdated (< v${minDockerMajorVersion}), forcing 'docker build' ..${NULL_COLOR}\n"
-		FORCE_DOCKER_BUILD="1"
-	fi
+minDockerMajorVersion="23"
+dockerMajorVersion=$(echo "${dockerVersion}" | cut -d '.' -f 1)
+
+if [ "${dockerMajorVersion}" -lt ${minDockerMajorVersion} ]
+then
+	echo -e "${INFO_COLOR}Docker is outdated (v${dockerVersion} < v${minDockerMajorVersion}), forcing 'docker build' ..${NULL_COLOR}\n"
+	FORCE_DOCKER_BUILD="1"
 fi
 
 if [ ${FORCE_DOCKER_BUILD} -eq 1 ]
