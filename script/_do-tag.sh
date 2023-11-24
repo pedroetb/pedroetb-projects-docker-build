@@ -2,6 +2,11 @@
 
 echo -e "\n${INFO_COLOR}Tagging ${DATA_COLOR}${SOURCE_IMAGE}${INFO_COLOR} image ..${NULL_COLOR}\n"
 
+if [ ${DOCKER_VERBOSE} -eq 0 ]
+then
+	dockerPushPullOpts="-q"
+fi
+
 if [ -z "${SSH_BUILD_REMOTE}" ]
 then
 	cmdPrefix="eval"
@@ -41,13 +46,14 @@ doLogoutCmd() {
 	fi
 }
 
-pullCmd="${setDockerConfig} docker pull ${SOURCE_IMAGE}"
+pullCmd="${setDockerConfig} docker pull ${dockerPushPullOpts} ${SOURCE_IMAGE}"
 
 tagCmd="docker tag ${SOURCE_IMAGE} ${TARGET_IMAGE}"
 tagLatestCmd="docker tag ${SOURCE_IMAGE} ${targetImageName}:${LATEST_TAG_VALUE}"
 
-pushOriginalTagCmd="${setDockerConfig} docker push ${TARGET_IMAGE}"
-pushLatestTagCmd="${setDockerConfig} docker push ${targetImageName}:${LATEST_TAG_VALUE}"
+pushBaseCmd="${setDockerConfig} docker push ${dockerPushPullOpts}"
+pushOriginalTagCmd="${pushBaseCmd} ${TARGET_IMAGE}"
+pushLatestTagCmd="${pushBaseCmd} ${targetImageName}:${LATEST_TAG_VALUE}"
 pushCmd="${pushOriginalTagCmd}"
 
 if [ ! -z "${SOURCE_REGISTRY_USER}" ] && [ ! -z "${SOURCE_REGISTRY_PASS}" ]

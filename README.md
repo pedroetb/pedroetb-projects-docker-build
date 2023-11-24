@@ -63,6 +63,7 @@ You may define these environment variables (**bold** are mandatory):
 | *COMPOSE_PROJECT_DIRECTORY* | `build` | Path of directory which contains *compose* configuration. |
 | *DOCKER_BUILD_CONTEXT* | `.` | Name of directory which `docker build` will use as context root. Not valid when using `docker compose build` alternative. |
 | *DOCKER_BUILD_OPTS* | - | List of additional *docker build* options, used by both `docker compose build` and `docker build` alternatives. |
+| *DOCKER_VERBOSE* | `0` | Show full output of Docker operations (`build`, `pull` and `push`) when enabled. |
 | *ENV_PREFIX* | `DBLD_` | Prefix used to identify variables to be defined in remote environment and service, available there without this prefix. Change this if default value collides with the beginning of your variable names. |
 | *ENV_SPACE_REPLACEMENT* | `<dbld-space>` | Unique string (change this if that is not true for you) used to replace spaces into variable values while handling them. |
 | *FORCE_DOCKER_BUILD* | `0` | Use always `docker build` alternative instead of `docker compose build`, even if *compose* configuration is available. |
@@ -89,6 +90,7 @@ You may define these environment variables (**bold** are mandatory):
 | - | - | - |
 | **SOURCE_IMAGE** | - | Identification (`<name:tag>`) of Docker image to use as source. Can be provided as first argument too. |
 | **TARGET_IMAGE** | - | Identification (`<name:tag>`) of Docker image to use as target. Can be provided as second argument too. |
+| *DOCKER_VERBOSE* | `0` | Show full output of Docker operations (`build`, `pull` and `push`) when enabled. |
 | *LATEST_TAG_VALUE* | `latest` | Value used as Docker image tag, representing the most recent version of a Docker image. |
 | *OMIT_IMAGE_PUSH* | `0` | Cancel image publication to Docker registry after a successful tag. |
 | *OMIT_LATEST_TAG* | `0` | Do not tag image as `<LATEST_TAG_VALUE>` after a successful tag. |

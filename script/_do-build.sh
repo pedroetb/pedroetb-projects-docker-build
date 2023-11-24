@@ -5,6 +5,12 @@ echo -e "\n${INFO_COLOR}Building ${DATA_COLOR}${PACKAGED_IMAGE_NAME}:${PACKAGED_
 latestPackagedImage=${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
 dockerDefaultBuildOpts="--pull --force-rm"
 
+if [ ${DOCKER_VERBOSE} -eq 0 ]
+then
+	dockerDefaultBuildOpts="${dockerDefaultBuildOpts} -q"
+	dockerPushPullOpts="-q"
+fi
+
 if [ -z "${SSH_BUILD_REMOTE}" ]
 then
 	cmdPrefix="eval"
@@ -67,7 +73,7 @@ buildCmd="\
 			${DOCKER_BUILD_OPTS} \
 			${BUILD_SERVICE_NAME}; \
 	else \
-		docker pull ${latestPackagedImage}; \
+		docker pull ${dockerPushPullOpts} ${latestPackagedImage}; \
 		docker build \
 			--cache-from ${latestPackagedImage} \
 			${dockerDefaultBuildOpts} \
@@ -80,8 +86,9 @@ rmCmd="rm -rf ${remoteBuildHome}"
 
 tagCmd="docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${latestPackagedImage}"
 
-pushOriginalTagCmd="${setDockerConfig} docker push ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}"
-pushLatestTagCmd="${setDockerConfig} docker push ${latestPackagedImage}"
+pushBaseCmd="${setDockerConfig} docker push ${dockerPushPullOpts}"
+pushOriginalTagCmd="${pushBaseCmd} ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}"
+pushLatestTagCmd="${pushBaseCmd} ${latestPackagedImage}"
 pushCmd="${pushOriginalTagCmd} && ${pushLatestTagCmd}"
 
 if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
