@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo -e "\n${INFO_COLOR}Building ${DATA_COLOR}${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}${INFO_COLOR} image ..${NULL_COLOR}\n"
+echo ""
 
 latestPackagedImage=${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
 dockerDefaultBuildOpts="--pull --force-rm"
@@ -41,6 +41,17 @@ fi
 
 loginCmd="${setDockerConfig} docker login -u \"${REGISTRY_USER}\" -p \"${REGISTRY_PASS}\" ${REGISTRY_URL}"
 
+if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
+then
+	echo -e "${INFO_COLOR}Docker registry credentials not found, omitting login and image push ..${NULL_COLOR}\n"
+	OMIT_IMAGE_PUSH="1"
+else
+	if $(echo ${cmdPrefix}) ${loginCmd}
+	then
+		loggedIn="1"
+	fi
+fi
+
 logoutCmd="${setDockerConfig} docker logout ${REGISTRY_URL}"
 
 rmDockerConfigCmd="rm -rf ${dockerConfigPath}"
@@ -60,6 +71,30 @@ doLogoutCmd() {
 
 	eval "${removeBuildEnvFile}"
 }
+
+if [ ! -z "${IMAGES_FOR_CACHING}" ]
+then
+	echo -e "${INFO_COLOR}Pulling Docker images to feed cache ..${NULL_COLOR}"
+	echo -e "  ${INFO_COLOR} images [ ${DATA_COLOR}${IMAGES_FOR_CACHING}${INFO_COLOR} ]${NULL_COLOR}\n"
+
+	pullCacheCmd="\
+		pullFailure=0; \
+		for imageToPull in ${IMAGES_FOR_CACHING}; \
+		do \
+			if ! docker pull ${dockerPushPullOpts} \${imageToPull}; \
+			then
+				pullFailure=1; \
+			fi;
+		done; \
+		[ \${pullFailure} -eq 0 ]"
+
+	if $(echo ${cmdPrefix}) ${pullCacheCmd}
+	then
+		echo -e "\n${PASS_COLOR}Cache images successfully pulled!${NULL_COLOR}\n"
+	else
+		echo -e "\n${FAIL_COLOR}Any of cache images failed to be pulled!${NULL_COLOR}\n"
+	fi
+fi
 
 buildCmd="\
 	${buildContextRoot:+cd ${buildContextRoot};} \
@@ -92,16 +127,7 @@ pushOriginalTagCmd="${pushBaseCmd} ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}"
 pushLatestTagCmd="${pushBaseCmd} ${latestPackagedImage}"
 pushCmd="${pushOriginalTagCmd} && ${pushLatestTagCmd}"
 
-if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
-then
-	echo -e "${INFO_COLOR}Docker registry credentials not found, omitting login and image push ..${NULL_COLOR}\n"
-	OMIT_IMAGE_PUSH="1"
-else
-	if $(echo ${cmdPrefix}) ${loginCmd}
-	then
-		loggedIn="1"
-	fi
-fi
+echo -e "${INFO_COLOR}Building ${DATA_COLOR}${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}${INFO_COLOR} image ..${NULL_COLOR}\n"
 
 $(echo ${cmdPrefix}) ${buildCmd}
 buildCmdExitCode=${?}

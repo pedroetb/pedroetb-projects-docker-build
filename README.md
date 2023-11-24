@@ -70,6 +70,7 @@ You may define these environment variables (**bold** are mandatory):
 | *FORCE_DOCKER_BUILD* | `0` | Use always `docker build` alternative instead of `docker compose build`, even if *compose* configuration is available. |
 | *IMAGE_NAME_VARIABLE_NAME* | `IMAGE_NAME` | Value used as name of variable which will contain `PACKAGED_IMAGE_NAME` value at build process. Useful only for `docker compose build` alternative, to use this variable inside *compose* configuration file. |
 | *IMAGE_TAG_VARIABLE_NAME* | `IMAGE_TAG` | Value used as name of variable which will contain `PACKAGED_IMAGE_TAG` value at build process. Useful only for `docker compose build` alternative, to use this variable inside *compose* configuration file. |
+| *IMAGES_FOR_CACHING* | - | Docker images, separated by space, which should be pulled before building to provide contents for `cache_from` (at *compose* file for `docker compose build` ) or `--cache-from` (at command arguments for `docker build`). |
 | *LATEST_TAG_VALUE* | `latest` | Value used as Docker image tag, representing the most recent version of a Docker image. |
 | *OMIT_IMAGE_PUSH* | `0` | Cancel image publication to Docker registry after a successful build. |
 | *OMIT_LATEST_TAG* | `0` | Do not tag image as `<LATEST_TAG_VALUE>` after a successful build. |
