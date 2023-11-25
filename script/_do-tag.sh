@@ -66,6 +66,12 @@ fi
 
 if $(echo ${cmdPrefix}) ${pullCmd}
 then
+	# Avoid race condition between pull and tag
+	checkSourceImageIsAlreadyAvailable="docker image inspect ${SOURCE_IMAGE} > /dev/null 2>&1"
+	while ! $(echo ${cmdPrefix}) ${checkSourceImageIsAlreadyAvailable}
+	do
+		sleep 1
+	done
 	echo -e "\n${PASS_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${PASS_COLOR} successfully pulled${NULL_COLOR}\n"
 else
 	echo -e "\n${FAIL_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${FAIL_COLOR} pull failed!${NULL_COLOR}\n"
