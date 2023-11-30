@@ -4,20 +4,49 @@ Docker building utilities and common actions. Inspired by <https://gitlab.com/re
 
 You can use it to build (locally or remotely) your own Docker images, supporting **docker compose build** with compose configuration and plain **docker build** command.
 
-Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example. For remote building, `docker >= v23` is required (because `docker compose >= v2` plugin is needed, will fallback to `docker build` if outdated) at remote host.
+Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example. For remote building `docker >= v23` is required, because `docker compose >= v2` plugin is needed. Will fallback to `docker build` alternative if outdated.
 
 ## Actions
 
-* **build**: Build an image locally or at a remote Docker environment. Contains several stages:
-  * *prepare-env*: Try different paths to locate build configuration, retrieve environment variables from current environment and script arguments, prepare values for usage, etc.
-  * *check-config*: Validate *compose* configuration (if found). When configuration is missing or invalid, building will continue using `docker build` alternative.
-  * *prepare-build*: Copy resources to remote environment (when available), including build configuration, specific project resources, environment definition, etc.
-  * *do-build*: Automatically decide to use `docker compose build` or `docker build`, launch build process locally or remotely, create predefined image tags, push resultant image to Docker registry, clean temporary resources, etc.
-* **tag**: Apply a new tag to an already built Docker image, locally or at a remote Docker environment. Contains several stages:
-  * *prepare-registry*: Check variables and apply default values if missing, for Docker registry configuration.
-  * *prepare-tag*: Split image names and tags, check variables and apply default values if missing, for Docker tag application.
-  * *do-tag*: Login to registries, pull source image, apply new tag and push the result.
-* **flatten**: Obtain a single-level Docker image name from a multi-level source. Useful to tag images from GitLab registry (multi-level: *group-name/path/to/project*) to DockerHub (single-level: *username/path-to-project*). The output image name can be retrieved as script result or into `TARGET_IMAGE_NAME` environment variable.
+* **build**:
+
+  Build an image locally or at a remote Docker environment. Contains several stages:
+
+  1. **prepare-env**:
+
+     Try different paths to locate build configuration, retrieve environment variables from current environment and script arguments, prepare values for usage, etc.
+
+  1. **check-config**:
+
+     Validate *compose* configuration (if found). When configuration is missing or invalid, building will continue using `docker build` alternative.
+
+  1. **prepare-build**:
+
+     Copy resources to remote environment (when available), including build configuration, specific project resources, environment definition, etc.
+
+  1. **do-build**:
+
+     Automatically decide to use `docker compose build` or `docker build`, launch build process locally or remotely, create predefined image tags, push resultant image to Docker registry, clean temporary resources, etc.
+
+* **tag**:
+
+  Apply a new tag to an already built Docker image, locally or at a remote Docker environment. Contains several stages:
+
+  1. **prepare-registry**:
+
+     Check variables and apply default values if missing, for Docker registry configuration.
+
+  1. **prepare-tag**:
+
+     Split image names and tags, check variables and apply default values if missing, for Docker tag application.
+
+  1. **do-tag**:
+
+     Login to registries, pull source image, apply new tag and push the result.
+
+* **flatten**:
+
+  Obtain a single-level Docker image name from a multi-level source. Useful to tag images from GitLab registry (multi-level: *group-name/path/to/project*) to DockerHub (single-level: *username/path-to-project*). The output image name can be retrieved as script result or into `TARGET_IMAGE_NAME` environment variable.
 
 ## Usage
 
@@ -40,13 +69,13 @@ Configuration is possible through environment variables and by script (`<action>
 
 Using environment variables, you can configure:
 
-* Behaviour of this image itself.
-* Docker build arguments, using the `ENV_PREFIX` prefix in your variable names and a convenient *compose* configuration (or using `DOCKER_BUILD_OPTS` directly).
-* Variables inside *compose* configuration (using the `ENV_PREFIX` prefix in your variable names).
+* Behaviour of `docker-build` itself.
+* Docker build arguments, using the `ENV_PREFIX` (`DBLD_` by default) prefix in your variable names and a convenient *compose* configuration (or using `DOCKER_BUILD_OPTS` directly).
+* Variables inside *compose* configuration, using the `ENV_PREFIX` (`DBLD_` by default) prefix in your variable names.
 
 Using script parameters you can set:
 
-* When action is *build*, Docker build arguments and variables inside *compose* configuration can be set by parameters. These parameters overwrite previous environment values, including those defined using the `ENV_PREFIX` prefix.
+* When action is *build*, Docker build arguments and variables inside *compose* configuration can be set by parameters. These parameters overwrite previous environment values, including those defined using the `ENV_PREFIX` (`DBLD_` by default) prefix.
 
 ## Configuration
 
@@ -122,15 +151,17 @@ You may define these environment variables (**bold** are mandatory):
 
 When using *build* action, you can configure your own image arguments through variables:
 
+> Note that you must declare them at your compose files too (into `build.args` section, for example).
+
 * Define any variable whose name is prefixed by `ENV_PREFIX` prefix:
 
   1. Set variable `docker run ... -e DBLD_ANY_NAME=value ... build`.
-  2. `ANY_NAME` will be set into image as argument with `value` value.
+  2. `ANY_NAME` will be available to set into image as argument with `value` value.
 
 * Pass any variable as build script parameter (without `ENV_PREFIX` prefix):
 
   1. Set parameter to build script: `docker run ... build ANY_NAME=value`.
-  2. `ANY_NAME` will be set into image as argument with `value` value.
+  2. `ANY_NAME` will be available to set into image as argument with `value` value.
 
 ## Examples
 

@@ -8,6 +8,8 @@ WORKDIR /build
 
 ENTRYPOINT ["/bin/sh", "-c"]
 
+ENV BUILDX_GIT_INFO=false
+
 ARG OPENSSH_VERSION
 
 RUN apk --update --no-cache add \
