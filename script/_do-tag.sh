@@ -11,7 +11,7 @@ if [ -z "${SSH_BUILD_REMOTE}" ]
 then
 	cmdPrefix="eval"
 else
-	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
+	cmdPrefix="runRemoteCmd"
 	randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
 	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"

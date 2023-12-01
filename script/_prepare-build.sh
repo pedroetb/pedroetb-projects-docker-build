@@ -3,7 +3,7 @@
 echo -e "\n${INFO_COLOR}Preparing build configuration and resources ..${NULL_COLOR}"
 
 checkDockerInstalled="command -v docker > /dev/null"
-if ! ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE} ${checkDockerInstalled}
+if ! runRemoteCmd "${checkDockerInstalled}"
 then
 	echo -e "\n${FAIL_COLOR}Docker is not available at build target host environment!${NULL_COLOR}"
 	eval "${closeSshCmd}"
@@ -18,7 +18,7 @@ echo -e "\n${INFO_COLOR}Sending building resources to remote ${DATA_COLOR}${remo
 echo -e "  ${INFO_COLOR}building path [ ${DATA_COLOR}${remoteBuildHome}${INFO_COLOR} ]${NULL_COLOR}\n"
 
 # Create directory to hold build configuration files
-if ! ssh ${SSH_PARAMS} "${SSH_BUILD_REMOTE}" "mkdir -p ${remoteBuildHome}"
+if ! runRemoteCmd "mkdir -p ${remoteBuildHome}"
 then
 	echo -e "${FAIL_COLOR}Building path ${DATA_COLOR}${remoteBuildHome}${FAIL_COLOR} creation failed!${NULL_COLOR}"
 	eval "${removeBuildEnvFile}"

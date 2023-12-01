@@ -15,7 +15,7 @@ if [ -z "${SSH_BUILD_REMOTE}" ]
 then
 	cmdPrefix="eval"
 else
-	cmdPrefix="ssh ${SSH_PARAMS} ${SSH_BUILD_REMOTE}"
+	cmdPrefix="runRemoteCmd"
 
 	buildContextRoot="${remoteBuildHome}"
 	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
