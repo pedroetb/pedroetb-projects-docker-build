@@ -58,9 +58,13 @@ pushCmd="${pushOriginalTagCmd}"
 
 if [ ! -z "${SOURCE_REGISTRY_USER}" ] && [ ! -z "${SOURCE_REGISTRY_PASS}" ]
 then
+	echo -e "${INFO_COLOR}Login to source registry ${DATA_COLOR}${SOURCE_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
 	if $(echo ${cmdPrefix}) ${loginSourceCmd}
 	then
 		loggedInSource="1"
+		echo -e "\n${PASS_COLOR}Login to source registry was successful!${NULL_COLOR}"
+	else
+		echo -e "\n${FAIL_COLOR}Login to source registry failed!${NULL_COLOR}"
 	fi
 fi
 
@@ -108,9 +112,13 @@ then
 	then
 		if [ "${TARGET_REGISTRY_USER}" != "${SOURCE_REGISTRY_USER}" ] || [ "${TARGET_REGISTRY_URL}" != "${SOURCE_REGISTRY_URL}" ]
 		then
+			echo -e "${INFO_COLOR}Login to target registry ${DATA_COLOR}${TARGET_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
 			if $(echo ${cmdPrefix}) ${loginTargetCmd}
 			then
 				loggedInTarget="1"
+				echo -e "\n${PASS_COLOR}Login to target registry was successful!${NULL_COLOR}"
+			else
+				echo -e "\n${FAIL_COLOR}Login to target registry failed!${NULL_COLOR}"
 			fi
 		fi
 	fi

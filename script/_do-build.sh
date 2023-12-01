@@ -47,9 +47,13 @@ then
 	echo -e "${INFO_COLOR}Docker registry credentials not found, omitting login and image push ..${NULL_COLOR}\n"
 	OMIT_IMAGE_PUSH="1"
 else
+	echo -e "${INFO_COLOR}Login to registry ${DATA_COLOR}${REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
 	if $(echo ${cmdPrefix}) ${loginCmd}
 	then
 		loggedIn="1"
+		echo -e "\n${PASS_COLOR}Login to registry was successful!${NULL_COLOR}"
+	else
+		echo -e "\n${FAIL_COLOR}Login to registry failed!${NULL_COLOR}"
 	fi
 fi
 
