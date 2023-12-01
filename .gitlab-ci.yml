@@ -9,10 +9,10 @@ stages:
   - post-package
 
 .docker-login-gitlab: &docker-login-gitlab |
-  docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+  env | grep "^CI_JOB_TOKEN=" | cut -d= -f2- | docker login -u gitlab-ci-token --password-stdin ${CI_REGISTRY}
 
 .docker-login-dockerhub: &docker-login-dockerhub |
-  docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_PASS}
+  env | grep "^DOCKER_HUB_PASS=" | cut -d= -f2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
 
 .docker-operations:
   extends: .docker-env
