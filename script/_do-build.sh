@@ -130,7 +130,7 @@ tagCmd="docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${latestPackaged
 pushBaseCmd="${setDockerConfig} docker push ${dockerPushPullOpts}"
 pushOriginalTagCmd="${pushBaseCmd} ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}"
 pushLatestTagCmd="${pushBaseCmd} ${latestPackagedImage}"
-pushCmd="${pushOriginalTagCmd} && ${pushLatestTagCmd}"
+pushCmd="${pushOriginalTagCmd}"
 
 echo -e "${INFO_COLOR}Building ${DATA_COLOR}${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}${INFO_COLOR} image ..${NULL_COLOR}\n"
 
@@ -154,6 +154,7 @@ fi
 if [ ${OMIT_LATEST_TAG} -eq 0 ]
 then
 	$(echo ${cmdPrefix}) ${tagCmd}
+	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
 	echo -e "\n${INFO_COLOR}Tagged image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
 else
 	echo -e "${INFO_COLOR}Omit tagging image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
