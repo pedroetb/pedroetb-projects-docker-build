@@ -154,10 +154,14 @@ fi
 if [ ${OMIT_LATEST_TAG} -eq 0 ]
 then
 	$(echo ${cmdPrefix}) ${tagCmd}
+	echo -e "\n${INFO_COLOR}Tagged image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
+else
+	echo -e "${INFO_COLOR}Omit tagging image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
 fi
 
 if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
 then
+	echo -e "\n${INFO_COLOR}Pushing image to registry ..${NULL_COLOR}\n"
 	if $(echo ${cmdPrefix}) ${pushCmd}
 	then
 		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}"
@@ -166,6 +170,8 @@ then
 		doLogoutCmd
 		exit 1
 	fi
+else
+	echo -e "\n${INFO_COLOR}Omit image pushing!${NULL_COLOR}"
 fi
 
 doLogoutCmd
