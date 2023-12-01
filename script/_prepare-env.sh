@@ -48,6 +48,12 @@ do
 	addVariableToEnv "${arg}"
 done
 
+if [ ! -z "${REGISTRY_USER}" ] && [ ! -z "${REGISTRY_PASS}" ]
+then
+	dbldRegistryPassVarName=DOCKER_BUILD_REGISTRY_PASS
+	addVariableToEnv "${dbldRegistryPassVarName}=${REGISTRY_PASS}"
+fi
+
 echo -e " ]${NULL_COLOR}"
 
 # Set .env file with collected environment variables
