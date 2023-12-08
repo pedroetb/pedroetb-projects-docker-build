@@ -14,13 +14,7 @@ then
 	PACKAGED_IMAGE_TAG="${LATEST_TAG_VALUE}"
 fi
 
-if [ -z "${SSH_BUILD_REMOTE}" ]
-then
-	echo -e "\n${INFO_COLOR}Running Docker build locally ..${NULL_COLOR}"
-else
-	. _ssh-config.sh
-	echo -e "\n${INFO_COLOR}Running Docker build at remote target ${DATA_COLOR}${remoteHost}${INFO_COLOR}..${NULL_COLOR}"
-fi
+. _prepare-target.sh
 
 . _prepare-env.sh
 

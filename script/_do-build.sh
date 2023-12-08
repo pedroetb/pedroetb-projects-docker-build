@@ -11,19 +11,15 @@ then
 	dockerPushPullOpts="-q"
 fi
 
-if [ -z "${SSH_BUILD_REMOTE}" ]
+if [ ! -z "${SSH_BUILD_REMOTE}" ]
 then
-	cmdPrefix="eval"
-else
-	cmdPrefix="runRemoteCmd"
-
 	buildContextRoot="${remoteBuildHome}"
 	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
 fi
 
 getDockerVersion="docker version --format '{{.Server.Version}}'"
-dockerVersion=$($(echo ${cmdPrefix}) ${getDockerVersion})
+dockerVersion=$(runCmdOnTarget "${getDockerVersion}")
 
 minDockerMajorVersion="23"
 dockerMajorVersion=$(echo "${dockerVersion}" | cut -d '.' -f 1)
@@ -48,7 +44,7 @@ then
 	OMIT_IMAGE_PUSH="1"
 else
 	echo -e "${INFO_COLOR}Login to registry ${DATA_COLOR}${REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
-	if $(echo ${cmdPrefix}) ${loginCmd}
+	if runCmdOnTarget "${loginCmd}"
 	then
 		loggedIn="1"
 		echo -e "\n${PASS_COLOR}Login to registry was successful!${NULL_COLOR}"
@@ -65,12 +61,12 @@ doLogoutCmd() {
 
 	if [ ! -z ${loggedIn} ]
 	then
-		$(echo ${cmdPrefix}) ${logoutCmd}
+		runCmdOnTarget "${logoutCmd}"
 	fi
 
 	if [ ! -z "${SSH_BUILD_REMOTE}" ]
 	then
-		$(echo ${cmdPrefix}) ${rmDockerConfigCmd}
+		runCmdOnTarget "${rmDockerConfigCmd}"
 		eval "${closeSshCmd}"
 	fi
 
@@ -93,7 +89,7 @@ then
 		done; \
 		[ \${pullFailure} -eq 0 ]"
 
-	if $(echo ${cmdPrefix}) ${pullCacheCmd}
+	if runCmdOnTarget "${pullCacheCmd}"
 	then
 		echo -e "\n${PASS_COLOR}Cache images successfully pulled!${NULL_COLOR}\n"
 	else
@@ -134,12 +130,12 @@ pushCmd="${pushOriginalTagCmd}"
 
 echo -e "${INFO_COLOR}Building ${DATA_COLOR}${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}${INFO_COLOR} image ..${NULL_COLOR}\n"
 
-$(echo ${cmdPrefix}) ${buildCmd}
+runCmdOnTarget "${buildCmd}"
 buildCmdExitCode=${?}
 
 if [ ! -z "${SSH_BUILD_REMOTE}" ]
 then
-	$(echo ${cmdPrefix}) ${rmCmd}
+	runCmdOnTarget "${rmCmd}"
 fi
 
 if [ ${buildCmdExitCode} -eq 0 ]
@@ -153,7 +149,7 @@ fi
 
 if [ ${OMIT_LATEST_TAG} -eq 0 ]
 then
-	$(echo ${cmdPrefix}) ${tagCmd}
+	runCmdOnTarget "${tagCmd}"
 	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
 	echo -e "\n${INFO_COLOR}Tagged image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
 else
@@ -163,7 +159,7 @@ fi
 if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
 then
 	echo -e "\n${INFO_COLOR}Pushing image to registry ..${NULL_COLOR}\n"
-	if $(echo ${cmdPrefix}) ${pushCmd}
+	if runCmdOnTarget "${pushCmd}"
 	then
 		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}"
 	else

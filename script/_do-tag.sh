@@ -7,11 +7,8 @@ then
 	dockerPushPullOpts="-q"
 fi
 
-if [ -z "${SSH_BUILD_REMOTE}" ]
+if [ ! -z "${SSH_BUILD_REMOTE}" ]
 then
-	cmdPrefix="eval"
-else
-	cmdPrefix="runRemoteCmd"
 	randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
 	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
@@ -31,17 +28,17 @@ doLogoutCmd() {
 
 	if [ ! -z ${loggedInSource} ]
 	then
-		$(echo ${cmdPrefix}) ${logoutSourceCmd}
+		runCmdOnTarget "${logoutSourceCmd}"
 	fi
 
 	if [ ! -z ${loggedInTarget} ]
 	then
-		$(echo ${cmdPrefix}) ${logoutTargetCmd}
+		runCmdOnTarget "${logoutTargetCmd}"
 	fi
 
 	if [ ! -z "${SSH_BUILD_REMOTE}" ]
 	then
-		$(echo ${cmdPrefix}) ${rmDockerConfigCmd}
+		runCmdOnTarget "${rmDockerConfigCmd}"
 		eval "${closeSshCmd}"
 	fi
 }
@@ -59,7 +56,7 @@ pushCmd="${pushOriginalTagCmd}"
 if [ ! -z "${SOURCE_REGISTRY_USER}" ] && [ ! -z "${SOURCE_REGISTRY_PASS}" ]
 then
 	echo -e "${INFO_COLOR}Login to source registry ${DATA_COLOR}${SOURCE_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
-	if $(echo ${cmdPrefix}) ${loginSourceCmd}
+	if runCmdOnTarget "${loginSourceCmd}"
 	then
 		loggedInSource="1"
 		echo -e "\n${PASS_COLOR}Login to source registry was successful!${NULL_COLOR}"
@@ -68,11 +65,11 @@ then
 	fi
 fi
 
-if $(echo ${cmdPrefix}) ${pullCmd}
+if runCmdOnTarget "${pullCmd}"
 then
 	# Avoid race condition between pull and tag
 	checkSourceImageIsAlreadyAvailable="docker image inspect ${SOURCE_IMAGE} > /dev/null 2>&1"
-	while ! $(echo ${cmdPrefix}) ${checkSourceImageIsAlreadyAvailable}
+	while ! runCmdOnTarget "${checkSourceImageIsAlreadyAvailable}"
 	do
 		sleep 1
 	done
@@ -83,7 +80,7 @@ else
 	exit 1
 fi
 
-if $(echo ${cmdPrefix}) ${tagCmd}
+if runCmdOnTarget "${tagCmd}"
 then
 	echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${targetImageTag}${NULL_COLOR}\n"
 else
@@ -96,7 +93,7 @@ if [ ${OMIT_LATEST_TAG} -eq 0 ]
 then
 	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
 
-	if $(echo ${cmdPrefix}) ${tagLatestCmd}
+	if runCmdOnTarget "${tagLatestCmd}"
 	then
 		echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${LATEST_TAG_VALUE}${NULL_COLOR}\n"
 	else
@@ -113,7 +110,7 @@ then
 		if [ "${TARGET_REGISTRY_USER}" != "${SOURCE_REGISTRY_USER}" ] || [ "${TARGET_REGISTRY_URL}" != "${SOURCE_REGISTRY_URL}" ]
 		then
 			echo -e "${INFO_COLOR}Login to target registry ${DATA_COLOR}${TARGET_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
-			if $(echo ${cmdPrefix}) ${loginTargetCmd}
+			if runCmdOnTarget "${loginTargetCmd}"
 			then
 				loggedInTarget="1"
 				echo -e "\n${PASS_COLOR}Login to target registry was successful!${NULL_COLOR}"
@@ -123,7 +120,7 @@ then
 		fi
 	fi
 
-	if $(echo ${cmdPrefix}) ${pushCmd}
+	if runCmdOnTarget "${pushCmd}"
 	then
 		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}"
 	else
