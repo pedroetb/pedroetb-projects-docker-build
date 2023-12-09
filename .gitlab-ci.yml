@@ -42,10 +42,9 @@ docker-build:
       --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
       build
       --pull
+      -t ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
       ${DOCKER_BUILD_ARGS};
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
-    - docker push ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
-    - docker push ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
+    - docker push -aq ${PACKAGED_IMAGE_NAME}
   rules:
     - if: $CI_MERGE_REQUEST_ID ||
           $CI_PIPELINE_SOURCE == "schedule"
@@ -68,21 +67,19 @@ docker-tag-gitlab:
   extends: .docker-tag
   script:
     - *docker-login-gitlab
-    - docker pull ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
+    - docker pull -q ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
     - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
     - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:${LATEST_TAG_VALUE}
-    - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
-    - docker push ${CI_REGISTRY_IMAGE}:${LATEST_TAG_VALUE}
+    - docker push -qa ${CI_REGISTRY_IMAGE}
 
 docker-tag-dockerhub:
   extends: .docker-tag
   script:
     - *docker-login-gitlab
     - *docker-login-dockerhub
-    - docker pull ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
+    - docker pull -q ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
     - dockerHubImagePath="$(echo ${CI_PROJECT_PATH} | cut -d '/' -f 2- | sed 's/\//-/g')"
     - dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}"
     - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:${CI_COMMIT_TAG}
     - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:${LATEST_TAG_VALUE}
-    - docker push ${dockerHubImage}:${CI_COMMIT_TAG}
-    - docker push ${dockerHubImage}:${LATEST_TAG_VALUE}
+    - docker push -qa ${dockerHubImage}
