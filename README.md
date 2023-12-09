@@ -44,9 +44,13 @@ Support remote actions, connecting through SSH to other machines. This is useful
 
      Check if target environment is local or remote, preparing connection and functions used at next steps.
 
+  1. **prepare-credentials**:
+
+     Use a file to store registry credentials, to avoid using insecure CLI arguments for passwords.
+
   1. **prepare-tag**:
 
-     Split image names and tags, check variables and apply default values if missing, for Docker tag application.
+     Split image names and tags, check variables and apply default values if missing, for Docker tag application. When tagging at remote environment, send registry credentials to host.
 
   1. **do-tag**:
 

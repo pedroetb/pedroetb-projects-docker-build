@@ -7,22 +7,17 @@ then
 	dockerPushPullOpts="-q"
 fi
 
-if [ ! -z "${SSH_BUILD_REMOTE}" ]
-then
-	randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
-	dockerConfigPath="${REMOTE_BUILD_PATH}/.${randomValue}"
-	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
-fi
+loginSourceCmd="${setDockerConfig} grep \"^${dbldSourceRegistryPassVarName}=\" \"${envTagFilePath}\" | cut -d= -f2- | \
+	docker login -u \"${SOURCE_REGISTRY_USER}\" --password-stdin ${SOURCE_REGISTRY_URL}"
 
-loginSourceCmd="${setDockerConfig} docker login -u \"${SOURCE_REGISTRY_USER}\" -p \"${SOURCE_REGISTRY_PASS}\" ${SOURCE_REGISTRY_URL}"
-
-loginTargetCmd="${setDockerConfig} docker login -u \"${TARGET_REGISTRY_USER}\" -p \"${TARGET_REGISTRY_PASS}\" ${TARGET_REGISTRY_URL}"
+loginTargetCmd="${setDockerConfig} grep \"^${dbldTargetRegistryPassVarName}=\" \"${envTagFilePath}\" | cut -d= -f2- | \
+	docker login -u \"${TARGET_REGISTRY_USER}\" --password-stdin ${TARGET_REGISTRY_URL}"
 
 logoutSourceCmd="${setDockerConfig} docker logout ${SOURCE_REGISTRY_URL}"
 
 logoutTargetCmd="${setDockerConfig} docker logout ${TARGET_REGISTRY_URL}"
 
-rmDockerConfigCmd="rm -rf ${dockerConfigPath}"
+rmDockerConfigCmd="rm -rf ${remoteTagHome}"
 
 doLogoutCmd() {
 
@@ -41,6 +36,8 @@ doLogoutCmd() {
 		runCmdOnTarget "${rmDockerConfigCmd}"
 		eval "${closeSshCmd}"
 	fi
+
+	eval "${removeTagEnvFile}"
 }
 
 pullCmd="${setDockerConfig} docker pull ${dockerPushPullOpts} ${SOURCE_IMAGE}"

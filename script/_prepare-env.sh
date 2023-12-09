@@ -19,16 +19,16 @@ else
 fi
 removeBuildEnvFile="rm ${envBuildFilePath}"
 
-echo -e "\n${INFO_COLOR}Setting environment variables to local and build target host environments ..${NULL_COLOR}"
-echo -en "  ${INFO_COLOR}variable names [ ${DATA_COLOR}COMPOSE_FILE${INFO_COLOR}"
-
-envDefs="COMPOSE_FILE=${composeFilePath}"
-
 addVariableToEnv() {
 	envDefs="${envDefs}\\n${1}"
 	variableName=$(echo "${1}" | cut -d '=' -f 1)
 	echo -en "${INFO_COLOR}, ${DATA_COLOR}${variableName}${INFO_COLOR}"
 }
+
+echo -e "\n${INFO_COLOR}Setting environment variables to local and build target host environments ..${NULL_COLOR}"
+echo -en "  ${INFO_COLOR}variable names [ ${DATA_COLOR}COMPOSE_FILE${INFO_COLOR}"
+
+envDefs="COMPOSE_FILE=${composeFilePath}"
 
 # Include predefined variables first
 addVariableToEnv "${IMAGE_NAME_VARIABLE_NAME}=${PACKAGED_IMAGE_NAME}"

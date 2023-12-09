@@ -63,3 +63,40 @@ if [ "${targetImageTag}" == "${LATEST_TAG_VALUE}" ]
 then
 	OMIT_LATEST_TAG="1"
 fi
+
+if [ ! -z "${SSH_BUILD_REMOTE}" ]
+then
+	echo -e "\n${INFO_COLOR}Preparing tag resources ..${NULL_COLOR}"
+
+	checkDockerInstalled="command -v docker > /dev/null"
+	if ! runRemoteCmd "${checkDockerInstalled}"
+	then
+		echo -e "\n${FAIL_COLOR}Docker is not available at tag target host environment!${NULL_COLOR}"
+		eval "${closeSshCmd}"
+		eval "${removeTagEnvFile}"
+		exit 1
+	fi
+
+	randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
+	remoteTagHome="${REMOTE_BUILD_PATH}/.${randomValue}"
+	setDockerConfig="DOCKER_CONFIG=${remoteTagHome}"
+
+	echo -e "\n${INFO_COLOR}Sending tag resources to remote ${DATA_COLOR}${remoteHost}${INFO_COLOR} ..${NULL_COLOR}"
+	echo -e "  ${INFO_COLOR}tagging path [ ${DATA_COLOR}${remoteTagHome}${INFO_COLOR} ]${NULL_COLOR}\n"
+
+	if ! runRemoteCmd "mkdir -p ${remoteTagHome}"
+	then
+		echo -e "${FAIL_COLOR}Tagging path ${DATA_COLOR}${remoteTagHome}${FAIL_COLOR} creation failed!${NULL_COLOR}"
+		eval "${removeTagEnvFile}"
+		exit 1
+	fi
+
+	if scp ${SSH_PARAMS} -q ${envTagFilePath} "${SSH_BUILD_REMOTE}:${remoteTagHome}/"
+	then
+		echo -e "${PASS_COLOR}Tagging resources successfully sent!${NULL_COLOR}"
+	else
+		echo -e "${FAIL_COLOR}Tagging resources sending failed!${NULL_COLOR}"
+		eval "${removeTagEnvFile}"
+		exit 1
+	fi
+fi

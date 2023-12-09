@@ -6,6 +6,8 @@
 
 . _prepare-target.sh
 
+. _prepare-credentials.sh
+
 . _prepare-tag.sh
 
 . _do-tag.sh
