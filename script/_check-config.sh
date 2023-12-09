@@ -25,7 +25,30 @@ then
 	echo -e "${INFO_COLOR}Compose build configuration not found, omitting check ..${NULL_COLOR}"
 	FORCE_DOCKER_BUILD=1
 else
-	if docker compose --env-file "./${envBuildFilePath}" config -q
+	if [ ${ALLOW_COMPOSE_ENV_FILE_INTERPOLATION} -eq 0 ]
+	then
+		envConfigContent=""
+		while IFS= read -r envLine
+		do
+			if [ -z "${envLine}" ] || echo "${envLine}" | grep -q '^[#| ]'
+			then
+				continue
+			else
+				variableName=$(echo "${envLine}" | cut -d '=' -f 1)
+				variableValue=$(echo "${envLine}" | cut -d '=' -f 2-)
+
+				if echo "${variableValue}" | grep -q '\$\$' || echo "${variableValue}" | grep -q "^'"
+				then
+					envConfigContent="${envConfigContent}${variableName}=${variableValue}\\n"
+				else
+					envConfigContent="${envConfigContent}${variableName}='${variableValue}'\\n"
+				fi
+			fi
+		done < "${envBuildFilePath}"
+		echo -e "${envConfigContent}" > "${envBuildFilePath}"
+	fi
+
+	if docker compose --env-file "${envBuildFilePath}" config -q
 	then
 		echo -e "${PASS_COLOR}Valid compose configuration!${NULL_COLOR}"
 	else

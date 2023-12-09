@@ -12,6 +12,10 @@ Support remote actions, connecting through SSH to other machines. This is useful
 
   Build an image locally or at a remote Docker environment. Contains several stages:
 
+  1. **prepare-target**:
+
+     Check if target environment is local or remote, preparing connection and functions used at next steps.
+
   1. **prepare-env**:
 
      Try different paths to locate build configuration, retrieve environment variables from current environment and script arguments, prepare values for usage, etc.
@@ -35,6 +39,10 @@ Support remote actions, connecting through SSH to other machines. This is useful
   1. **prepare-registry**:
 
      Check variables and apply default values if missing, for Docker registry configuration.
+
+  1. **prepare-target**:
+
+     Check if target environment is local or remote, preparing connection and functions used at next steps.
 
   1. **prepare-tag**:
 
@@ -86,6 +94,7 @@ You may define these environment variables (**bold** are mandatory):
 | Variable name | Default value | Description |
 | - | - | - |
 | **PACKAGED_IMAGE_NAME** | - | Name of Docker image to be built (without tag). It will be available at build environment as `<IMAGE_NAME_VARIABLE_NAME>`. |
+| *ALLOW_COMPOSE_ENV_FILE_INTERPOLATION* | `0` | Allow passing variable values directly from `COMPOSE_ENV_FILE_NAME` file (`.env` by default), to let *Compose* interpolate variables used into values. By default, values will be single-quoted before checking config and building with *Compose*, to avoid getting unwanted variable resolution. Useful only for `docker compose build` alternative. |
 | *BUILD_SERVICE_NAME* | - | Name of service (among those defined into *compose* configuration) to be built. Default is empty, to build all services found (although tagging and pushing only accept one image at a time). |
 | *COMPOSE_ENV_FILE_NAME* | `.env` | Name of variable definition file, without path. |
 | *COMPOSE_FILE_NAME* | `compose.yaml` | Name of image build configuration file, without path. Support multiple files, separated by `:`. |
