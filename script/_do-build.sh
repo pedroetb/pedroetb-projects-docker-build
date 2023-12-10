@@ -18,6 +18,8 @@ then
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
 fi
 
+moveAndSetDockerConfigCmd="${buildContextRoot:+cd ${buildContextRoot};}${setDockerConfig}${setDockerConfig:+;}"
+
 getDockerVersion="docker version --format '{{.Server.Version}}'"
 dockerVersion=$(runCmdOnTarget "${getDockerVersion}")
 
@@ -35,7 +37,7 @@ then
 	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}\n"
 fi
 
-loginCmd="${setDockerConfig} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d= -f2- | \
+loginCmd="${moveAndSetDockerConfigCmd} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d= -f2- | \
 	docker login -u \"${REGISTRY_USER}\" --password-stdin ${REGISTRY_URL}"
 
 if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
@@ -97,9 +99,7 @@ then
 	fi
 fi
 
-buildCmd="\
-	${buildContextRoot:+cd ${buildContextRoot};} \
-	${setDockerConfig}${setDockerConfig:+;} \
+buildCmd="${moveAndSetDockerConfigCmd} \
 	if [ ${FORCE_DOCKER_BUILD} -eq 0 ]; \
 	then \
 		docker compose \
