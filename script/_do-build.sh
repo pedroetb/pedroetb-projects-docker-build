@@ -37,7 +37,7 @@ then
 	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}\n"
 fi
 
-loginCmd="${moveToBuildDirCmd} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d= -f2- | \
+loginCmd="${moveToBuildDirCmd} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d= -f2- | tr -d \"'\" | \
 	${setDockerConfig} docker login -u \"${REGISTRY_USER}\" --password-stdin ${REGISTRY_URL}"
 
 if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
@@ -49,9 +49,9 @@ else
 	if runCmdOnTarget "${loginCmd}"
 	then
 		loggedIn="1"
-		echo -e "\n${PASS_COLOR}Login to registry was successful!${NULL_COLOR}"
+		echo -e "\n${PASS_COLOR}Login to registry was successful!${NULL_COLOR}\n"
 	else
-		echo -e "\n${FAIL_COLOR}Login to registry failed!${NULL_COLOR}"
+		echo -e "\n${FAIL_COLOR}Login to registry failed!${NULL_COLOR}\n"
 	fi
 fi
 
@@ -147,11 +147,16 @@ else
 	exit 1
 fi
 
+if [ "${PACKAGED_IMAGE_TAG}" == "${LATEST_TAG_VALUE}" ]
+then
+	OMIT_LATEST_TAG="1"
+fi
+
 if [ ${OMIT_LATEST_TAG} -eq 0 ]
 then
 	runCmdOnTarget "${tagCmd}"
 	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
-	echo -e "\n${INFO_COLOR}Tagged image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
+	echo -e "${INFO_COLOR}Tagged image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
 else
 	echo -e "${INFO_COLOR}Omit tagging image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
 fi
@@ -161,14 +166,14 @@ then
 	echo -e "\n${INFO_COLOR}Pushing image to registry ..${NULL_COLOR}\n"
 	if runCmdOnTarget "${pushCmd}"
 	then
-		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}"
+		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}\n"
 	else
-		echo -e "\n${FAIL_COLOR}Image push failed!${NULL_COLOR}"
+		echo -e "\n${FAIL_COLOR}Image push failed!${NULL_COLOR}\n"
 		doLogoutCmd
 		exit 1
 	fi
 else
-	echo -e "\n${INFO_COLOR}Omit image pushing!${NULL_COLOR}"
+	echo -e "\n${INFO_COLOR}Omit image pushing!${NULL_COLOR}\n"
 fi
 
 doLogoutCmd

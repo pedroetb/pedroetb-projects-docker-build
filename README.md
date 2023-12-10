@@ -124,7 +124,7 @@ You may define these environment variables (**bold** are mandatory):
 | *SSH_BUILD_CONTROL_PERSIST* | `10` | Number of seconds while SSH connection to remote host remain open (useful for short but frequent connections). |
 | *SSH_BUILD_KEY* | - | Private key used to authenticate, paired with a public key accepted by remote host. **Required** to use remote building. |
 | *SSH_BUILD_PORT* | `22` | Port used for SSH connection to remote host. |
-| *SSH_BUILD_REMOTE* | - | SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally. |
+| *SSH_BUILD_REMOTE* | - | SSH user and hostname (DNS or IP) of remote host where you are going to build. Omit to run build locally. **Required** to use remote building. |
 
 ### Docker tag
 

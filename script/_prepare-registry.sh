@@ -27,8 +27,6 @@ then
 	fi
 fi
 
-echo ""
-
 if [ -z "${TARGET_REGISTRY_USER}" ]
 then
 	echo -e "${INFO_COLOR}Target Docker registry user not found, trying with 'SOURCE_REGISTRY_USER' ..${NULL_COLOR}"
