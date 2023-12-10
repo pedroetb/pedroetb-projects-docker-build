@@ -78,10 +78,10 @@ then
 	fi
 
 	randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
-	remoteTagHome="${REMOTE_BUILD_PATH}/${randomValue}"
+	remoteTagHome="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${remoteTagHome}"
 
-	moveAndSetDockerConfigCmd="${remoteTagHome:+cd ${remoteTagHome};}${setDockerConfig}${setDockerConfig:+;}"
+	moveToTagDirCmd="${remoteTagHome:+cd ${remoteTagHome};}"
 
 	echo -e "\n${INFO_COLOR}Sending tag resources to remote ${DATA_COLOR}${remoteHost}${INFO_COLOR} ..${NULL_COLOR}"
 	echo -e "  ${INFO_COLOR}tagging path [ ${DATA_COLOR}${remoteTagHome}${INFO_COLOR} ]${NULL_COLOR}\n"

@@ -18,7 +18,7 @@ then
 	setDockerConfig="DOCKER_CONFIG=${dockerConfigPath}"
 fi
 
-moveAndSetDockerConfigCmd="${buildContextRoot:+cd ${buildContextRoot};}${setDockerConfig}${setDockerConfig:+;}"
+moveToBuildDirCmd="${buildContextRoot:+cd ${buildContextRoot};}"
 
 getDockerVersion="docker version --format '{{.Server.Version}}'"
 dockerVersion=$(runCmdOnTarget "${getDockerVersion}")
@@ -37,8 +37,8 @@ then
 	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}\n"
 fi
 
-loginCmd="${moveAndSetDockerConfigCmd} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d= -f2- | \
-	docker login -u \"${REGISTRY_USER}\" --password-stdin ${REGISTRY_URL}"
+loginCmd="${moveToBuildDirCmd} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d= -f2- | \
+	${setDockerConfig} docker login -u \"${REGISTRY_USER}\" --password-stdin ${REGISTRY_URL}"
 
 if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
 then
@@ -84,7 +84,7 @@ then
 		pullFailure=0; \
 		for imageToPull in ${IMAGES_FOR_CACHING}; \
 		do \
-			if ! docker pull ${dockerPushPullOpts} \${imageToPull}; \
+			if ! ${setDockerConfig} docker pull ${dockerPushPullOpts} \${imageToPull}; \
 			then
 				pullFailure=1; \
 			fi;
@@ -99,18 +99,18 @@ then
 	fi
 fi
 
-buildCmd="${moveAndSetDockerConfigCmd} \
+buildCmd="${moveToBuildDirCmd} \
 	if [ ${FORCE_DOCKER_BUILD} -eq 0 ]; \
 	then \
-		docker compose \
+		${setDockerConfig} docker compose \
 			--env-file ${envBuildFilePath} \
 			build \
 			${dockerDefaultBuildOpts} \
 			${DOCKER_BUILD_OPTS} \
 			${BUILD_SERVICE_NAME}; \
 	else \
-		docker pull ${dockerPushPullOpts} ${latestPackagedImage}; \
-		docker build \
+		${setDockerConfig} docker pull ${dockerPushPullOpts} ${latestPackagedImage}; \
+		${setDockerConfig} docker build \
 			--cache-from ${latestPackagedImage} \
 			-f ${DOCKERFILE_PATH} \
 			${dockerDefaultBuildOpts} \
