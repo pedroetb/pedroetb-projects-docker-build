@@ -1,7 +1,13 @@
 include:
   - project: 'pedroetb-projects/gitlab-ci-templates'
     ref: master
-    file: '/_packaging.yml'
+    file: '/packaging-docker/_base.yml'
+  - project: 'pedroetb-projects/gitlab-ci-templates'
+    ref: master
+    file: '/packaging-docker/dockerfile-linting.yml'
+  - project: 'pedroetb-projects/gitlab-ci-templates'
+    ref: master
+    file: '/scanning/container-scanning.yml'
 
 stages:
   - pre-package
@@ -9,13 +15,13 @@ stages:
   - post-package
 
 .docker-login-gitlab: &docker-login-gitlab |
-  env | grep "^CI_JOB_TOKEN=" | cut -d= -f2- | docker login -u gitlab-ci-token --password-stdin ${CI_REGISTRY}
+  env | grep "^CI_JOB_TOKEN=" | cut -d '=' -f 2- | docker login -u gitlab-ci-token --password-stdin ${CI_REGISTRY}
 
 .docker-login-dockerhub: &docker-login-dockerhub |
-  env | grep "^DOCKER_HUB_PASS=" | cut -d= -f2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
+  env | grep "^DOCKER_HUB_PASS=" | cut -d '=' -f 2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
 
 .docker-operations:
-  extends: .docker-env
+  extends: .dind-env
   variables:
     PACKAGED_IMAGE_NAME: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}
     PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHA}
