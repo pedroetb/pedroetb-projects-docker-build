@@ -22,7 +22,10 @@ stages:
 
 .docker-operations:
   extends: .dind-env
+  image: ${PACKAGING_IMAGE_NAME}:${PACKAGING_IMAGE_TAG}
   variables:
+    PACKAGING_IMAGE_NAME: docker
+    PACKAGING_IMAGE_TAG: latest
     PACKAGED_IMAGE_NAME: ${CI_REGISTRY_IMAGE}/${CI_COMMIT_REF_SLUG}
     PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHA}
     LATEST_TAG_VALUE: latest
@@ -30,10 +33,7 @@ stages:
 docker-build:
   extends: .docker-operations
   stage: package
-  image: ${PACKAGING_IMAGE_NAME}:${PACKAGING_IMAGE_TAG}
   variables:
-    PACKAGING_IMAGE_NAME: docker
-    PACKAGING_IMAGE_TAG: latest
     COMPOSE_FILE_NAME: compose.yaml
     COMPOSE_ENV_FILE_NAME: .env
     COMPOSE_PROJECT_DIRECTORY: '.'
