@@ -1,6 +1,7 @@
 #!/bin/sh
 
 . _definitions.sh
+. _show-banner.sh
 
 if [ -z "${PACKAGED_IMAGE_NAME}" ]
 then
