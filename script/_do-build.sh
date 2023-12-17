@@ -156,6 +156,14 @@ if [ ${OMIT_LATEST_TAG} -eq 0 ]
 then
 	runCmdOnTarget "${tagCmd}"
 	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
+
+	# Avoid race condition between tag and push
+	checkLatestImageIsAlreadyAvailable="docker image inspect ${latestPackagedImage} > /dev/null 2>&1"
+	while ! runCmdOnTarget "${checkLatestImageIsAlreadyAvailable}"
+	do
+		sleep 1
+	done
+
 	echo -e "${INFO_COLOR}Tagged image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
 else
 	echo -e "${INFO_COLOR}Omit tagging image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
@@ -163,6 +171,13 @@ fi
 
 if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
 then
+	# Avoid race condition between build and push
+	checkPAckagedImageIsAlreadyAvailable="docker image inspect ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} > /dev/null 2>&1"
+	while ! runCmdOnTarget "${checkPAckagedImageIsAlreadyAvailable}"
+	do
+		sleep 1
+	done
+
 	echo -e "\n${INFO_COLOR}Pushing image to registry ..${NULL_COLOR}\n"
 	if runCmdOnTarget "${pushCmd}"
 	then

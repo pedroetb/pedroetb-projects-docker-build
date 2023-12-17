@@ -92,6 +92,13 @@ then
 
 	if runCmdOnTarget "${tagLatestCmd}"
 	then
+		# Avoid race condition between tag and push
+		checkLatestImageIsAlreadyAvailable="docker image inspect ${targetImageName}:${LATEST_TAG_VALUE} > /dev/null 2>&1"
+		while ! runCmdOnTarget "${checkLatestImageIsAlreadyAvailable}"
+		do
+			sleep 1
+		done
+
 		echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${LATEST_TAG_VALUE}${NULL_COLOR}\n"
 	else
 		echo -e "\n${FAIL_COLOR}Image ${DATA_COLOR}${targetImageName}${FAIL_COLOR} tagging failed!${NULL_COLOR}\n"
@@ -116,6 +123,13 @@ then
 			fi
 		fi
 	fi
+
+	# Avoid race condition between tag and push
+	checkTargetImageIsAlreadyAvailable="docker image inspect ${TARGET_IMAGE} > /dev/null 2>&1"
+	while ! runCmdOnTarget "${checkTargetImageIsAlreadyAvailable}"
+	do
+		sleep 1
+	done
 
 	if runCmdOnTarget "${pushCmd}"
 	then
