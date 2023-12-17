@@ -53,13 +53,13 @@ fi
 echo -e "  ${INFO_COLOR}source: ${DATA_COLOR}${SOURCE_IMAGE}${INFO_COLOR}"
 echo -e "  ${INFO_COLOR}target: ${DATA_COLOR}${TARGET_IMAGE}${INFO_COLOR}"
 
-if [ "${sourceImageName}" == "${targetImageName}" ] && [ "${sourceImageTag}" == "${targetImageTag}" ]
+if [ "${sourceImageName}" = "${targetImageName}" ] && [ "${sourceImageTag}" = "${targetImageTag}" ]
 then
 	echo -e "\n${FAIL_COLOR}Source and target Docker images are the same, omitting task ..${NULL_COLOR}"
 	exit 1
 fi
 
-if [ "${targetImageTag}" == "${LATEST_TAG_VALUE}" ]
+if [ "${targetImageTag}" = "${LATEST_TAG_VALUE}" ]
 then
 	OMIT_LATEST_TAG="1"
 fi

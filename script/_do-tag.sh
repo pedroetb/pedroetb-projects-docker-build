@@ -7,10 +7,10 @@ then
 	dockerPushPullOpts="-q"
 fi
 
-loginSourceCmd="${moveToTagDirCmd} grep \"^${dbldSourceRegistryPassVarName}=\" \"${envTagFilePath}\" | cut -d= -f2- | \
+loginSourceCmd="${moveToTagDirCmd} grep \"^${dbldSourceRegistryPassVarName}=\" \"${envTagFilePath}\" | cut -d '=' -f 2- | \
 	${setDockerConfig} docker login -u \"${SOURCE_REGISTRY_USER}\" --password-stdin ${SOURCE_REGISTRY_URL}"
 
-loginTargetCmd="${moveToTagDirCmd} grep \"^${dbldTargetRegistryPassVarName}=\" \"${envTagFilePath}\" | cut -d= -f2- | \
+loginTargetCmd="${moveToTagDirCmd} grep \"^${dbldTargetRegistryPassVarName}=\" \"${envTagFilePath}\" | cut -d '=' -f 2- | \
 	${setDockerConfig} docker login -u \"${TARGET_REGISTRY_USER}\" --password-stdin ${TARGET_REGISTRY_URL}"
 
 logoutSourceCmd="${setDockerConfig} docker logout ${SOURCE_REGISTRY_URL}"

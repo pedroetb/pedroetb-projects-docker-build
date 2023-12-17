@@ -37,7 +37,7 @@ then
 	echo -e "${INFO_COLOR}When forcing 'docker build', env-file is not used. Use build args inside 'DOCKER_BUILD_OPTS' to set values${NULL_COLOR}\n"
 fi
 
-loginCmd="${moveToBuildDirCmd} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d= -f2- | tr -d \"'\" | \
+loginCmd="${moveToBuildDirCmd} grep \"^${dbldRegistryPassVarName}=\" \"${envBuildFilePath}\" | cut -d '=' -f 2- | tr -d \"'\" | \
 	${setDockerConfig} docker login -u \"${REGISTRY_USER}\" --password-stdin ${REGISTRY_URL}"
 
 if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASS}" ]
@@ -147,7 +147,7 @@ else
 	exit 1
 fi
 
-if [ "${PACKAGED_IMAGE_TAG}" == "${LATEST_TAG_VALUE}" ]
+if [ "${PACKAGED_IMAGE_TAG}" = "${LATEST_TAG_VALUE}" ]
 then
 	OMIT_LATEST_TAG="1"
 fi

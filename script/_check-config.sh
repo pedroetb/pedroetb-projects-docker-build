@@ -27,7 +27,6 @@ then
 else
 	if [ ${ALLOW_COMPOSE_ENV_FILE_INTERPOLATION} -eq 0 ]
 	then
-		envConfigContent=""
 		while IFS= read -r envLine
 		do
 			if [ -z "${envLine}" ] || echo "${envLine}" | grep -q '^[#| ]'
