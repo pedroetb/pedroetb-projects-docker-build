@@ -12,9 +12,21 @@ Support remote actions, connecting through SSH to other machines. This is useful
 
   Build an image locally or at a remote Docker environment. Contains several stages:
 
+  1. **definitions**:
+
+     Set initial configuration values, getting environment values and with local defaults as fallback. Also prints the initial banner.
+
+  1. **show-banner**:
+
+     Prints the initial banner, with tool name and version.
+
   1. **prepare-target**:
 
      Check if target environment is local or remote, preparing connection and functions used at next steps.
+
+  1. **ssh-config**:
+
+     If target environment is remote, set connection options, add identity and define function to run commands at target.
 
   1. **prepare-env**:
 
@@ -26,7 +38,7 @@ Support remote actions, connecting through SSH to other machines. This is useful
 
   1. **prepare-build**:
 
-     Copy resources to remote environment (when available), including build configuration, specific project resources, environment definition, etc.
+     If target environment is remote, copy resources to remote environment, including build configuration, specific project resources, environment definition, etc.
 
   1. **do-build**:
 
@@ -36,6 +48,14 @@ Support remote actions, connecting through SSH to other machines. This is useful
 
   Apply a new tag to an already built Docker image, locally or at a remote Docker environment. Contains several stages:
 
+  1. **definitions**:
+
+     Set initial configuration values, getting environment values and with local defaults as fallback. Also prints the initial banner.
+
+  1. **show-banner**:
+
+     Prints the initial banner, with tool name and version.
+
   1. **prepare-registry**:
 
      Check variables and apply default values if missing, for Docker registry configuration.
@@ -43,6 +63,10 @@ Support remote actions, connecting through SSH to other machines. This is useful
   1. **prepare-target**:
 
      Check if target environment is local or remote, preparing connection and functions used at next steps.
+
+  1. **ssh-config**:
+
+     If target environment is remote, set connection options, add identity and define function to run commands at target.
 
   1. **prepare-credentials**:
 
@@ -58,7 +82,7 @@ Support remote actions, connecting through SSH to other machines. This is useful
 
 * **flatten**:
 
-  Obtain a single-level Docker image name from a multi-level source. Useful to tag images from GitLab registry (multi-level: *group-name/path/to/project*) to DockerHub (single-level: *username/path-to-project*). The output image name can be retrieved as script result or into `TARGET_IMAGE_NAME` environment variable.
+  Obtain a single-level Docker image name from a multi-level source. Useful to tag images from GitLab registry (multi-level: *group-name/path/to/project*) to DockerHub (single-level: *username/path-to-project*). The output image name can be retrieved as script result or into `TARGET_IMAGE_NAME` environment variable. Contains only **definitions** stage.
 
 ## Usage
 
