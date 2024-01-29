@@ -11,7 +11,6 @@ then
 	exit 1
 fi
 
-randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
 remoteBuildHome="${REMOTE_BUILD_PATH}/${randomValue}"
 
 echo -e "\n${INFO_COLOR}Sending building resources to remote ${DATA_COLOR}${remoteHost}${INFO_COLOR} ..${NULL_COLOR}"

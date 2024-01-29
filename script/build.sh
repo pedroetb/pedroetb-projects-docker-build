@@ -11,7 +11,7 @@ fi
 
 if [ -z "${PACKAGED_IMAGE_TAG}" ]
 then
-	echo -e "${INFO_COLOR}Using ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR} as 'PACKAGED_IMAGE_TAG' because it is undefined, you can set it with the tag of Docker image to build${NULL_COLOR}"
+	echo -e "${INFO_COLOR}Using ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR} as 'PACKAGED_IMAGE_TAG' because it is undefined, you can set it with the tag of Docker image to build${NULL_COLOR}\n"
 	PACKAGED_IMAGE_TAG="${LATEST_TAG_VALUE}"
 fi
 

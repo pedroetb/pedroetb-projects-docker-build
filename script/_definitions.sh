@@ -20,6 +20,8 @@ OMIT_IMAGE_PUSH="${OMIT_IMAGE_PUSH:-0}"
 PRESERVE_ROOT_LEVEL="${PRESERVE_ROOT_LEVEL:-0}"
 DOCKER_VERBOSE="${DOCKER_VERBOSE:-0}"
 ALLOW_COMPOSE_ENV_FILE_INTERPOLATION="${ALLOW_COMPOSE_ENV_FILE_INTERPOLATION:-0}"
+ENABLE_MULTIARCH_BUILD="${ENABLE_MULTIARCH_BUILD:-0}"
+MULTIARCH_PLATFORM_LIST="${MULTIARCH_PLATFORM_LIST:-linux/amd64,linux/386,linux/arm64/v8,linux/arm/v7,linux/arm/v6}"
 
 INFO_COLOR='\033[1;36m'
 DATA_COLOR='\033[1;33m'
@@ -32,3 +34,5 @@ SSH_BUILD_CONTROL_PERSIST="${SSH_BUILD_CONTROL_PERSIST:-10}"
 SSH_PARAMS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=error \
 	-o "ControlPath=\"/ssh_connection_socket_%h_%p_%r\"" -o ControlMaster=auto \
 	-o ControlPersist=${SSH_BUILD_CONTROL_PERSIST} -o Port=${SSH_BUILD_PORT} -o ConnectTimeout=10 -o BatchMode=yes"
+
+randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"

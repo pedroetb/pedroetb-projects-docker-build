@@ -4,6 +4,7 @@ echo ""
 
 latestPackagedImage=${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
 dockerDefaultBuildOpts="--pull --force-rm"
+multiArchBuilderName="dbld-multiarch-builder-${randomValue}"
 
 if [ ${DOCKER_VERBOSE} -eq 0 ]
 then
@@ -55,6 +56,14 @@ else
 	fi
 fi
 
+if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
+then
+	dockerDefaultBuildOpts="${dockerDefaultBuildOpts} --push"
+	echo -e "${INFO_COLOR}Image will be pushed to registry!${NULL_COLOR}\n"
+else
+	echo -e "${INFO_COLOR}Omitting image push to registry!${NULL_COLOR}\n"
+fi
+
 logoutCmd="${setDockerConfig} docker logout ${REGISTRY_URL}"
 
 rmDockerConfigCmd="rm -rf ${dockerConfigPath}"
@@ -99,34 +108,80 @@ then
 	fi
 fi
 
-buildCmd="${moveToBuildDirCmd} \
-	if [ ${FORCE_DOCKER_BUILD} -eq 0 ]; \
-	then \
-		${setDockerConfig} docker compose \
-			--env-file ${envBuildFilePath} \
-			build \
-			${dockerDefaultBuildOpts} \
-			${DOCKER_BUILD_OPTS} \
-			${BUILD_SERVICE_NAME}; \
-	else \
-		${setDockerConfig} docker pull ${dockerPushPullOpts} ${latestPackagedImage}; \
-		${setDockerConfig} docker build \
+if [ "${PACKAGED_IMAGE_TAG}" = "${LATEST_TAG_VALUE}" ]
+then
+	OMIT_LATEST_TAG="1"
+fi
+
+if [ ${OMIT_LATEST_TAG} -eq 0 ]
+then
+	echo -e "${INFO_COLOR}Also tagging image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}\n"
+else
+	echo -e "${INFO_COLOR}Omit tagging image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}\n"
+fi
+
+if [ ${ENABLE_MULTIARCH_BUILD} -eq 1 ]
+then
+	echo -e "${INFO_COLOR}Multi-arch build is enabled!${NULL_COLOR}\n"
+
+	if [ ${OMIT_IMAGE_PUSH} -eq 1 ]
+	then
+		echo -e "${INFO_COLOR}When image push is omitted for multi-arch build, resulting images are stored only at build cache!${NULL_COLOR}\n"
+	fi
+
+	createMultiArchBuilderCmd="${setDockerConfig} docker buildx create \
+		--driver docker-container \
+		--name ${multiArchBuilderName} \
+		--use > /dev/null"
+
+	runCmdOnTarget "${createMultiArchBuilderCmd}"
+fi
+
+buildCmd="${moveToBuildDirCmd}"
+
+if [ ${FORCE_DOCKER_BUILD} -eq 0 ]
+then
+	dockerComposeCmd="${setDockerConfig} docker compose \
+		--env-file ${envBuildFilePath} \
+		build \
+		${dockerDefaultBuildOpts} \
+		${DOCKER_BUILD_OPTS} \
+		${BUILD_SERVICE_NAME};"
+
+	buildCmd="${buildCmd} ${dockerComposeCmd}"
+
+	if [ ${OMIT_LATEST_TAG} -eq 0 ]
+	then
+		buildCmd="${buildCmd} \
+			${IMAGE_TAG_VARIABLE_NAME}=${LATEST_TAG_VALUE} \
+			${dockerComposeCmd}"
+	fi
+else
+	dockerBuildTagOpts="--tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}"
+
+	if [ ${OMIT_LATEST_TAG} -eq 0 ]
+	then
+		dockerBuildTagOpts="${dockerBuildTagOpts} --tag ${latestPackagedImage}"
+	fi
+
+	if [ ${ENABLE_MULTIARCH_BUILD} -eq 1 ]
+	then
+		multiArchEnabled="1"
+		dockerDefaultBuildOpts="${dockerDefaultBuildOpts} --platform '${MULTIARCH_PLATFORM_LIST}'"
+	fi
+
+	buildCmd="${buildCmd} \
+		${setDockerConfig} docker pull ${dockerPushPullOpts} ${latestPackagedImage};
+		${setDockerConfig} docker ${multiArchEnabled:+buildx} build \
 			--cache-from ${latestPackagedImage} \
 			-f ${DOCKERFILE_PATH} \
 			${dockerDefaultBuildOpts} \
 			${DOCKER_BUILD_OPTS} \
-			-t ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} \
-			${buildContextRoot}${buildContextRoot:+/}${DOCKER_BUILD_CONTEXT}; \
-	fi"
+			${dockerBuildTagOpts} \
+			${buildContextRoot}${buildContextRoot:+/}${DOCKER_BUILD_CONTEXT}"
+fi
 
 rmCmd="rm -rf ${remoteBuildHome}"
-
-tagCmd="docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${latestPackagedImage}"
-
-pushBaseCmd="${setDockerConfig} docker push ${dockerPushPullOpts}"
-pushOriginalTagCmd="${pushBaseCmd} ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}"
-pushLatestTagCmd="${pushBaseCmd} ${latestPackagedImage}"
-pushCmd="${pushOriginalTagCmd}"
 
 echo -e "${INFO_COLOR}Building ${DATA_COLOR}${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}${INFO_COLOR} image ..${NULL_COLOR}\n"
 
@@ -138,57 +193,23 @@ then
 	runCmdOnTarget "${rmCmd}"
 fi
 
+if [ ${ENABLE_MULTIARCH_BUILD} -eq 1 ]
+then
+	removeMultiArchBuilderCmd="${setDockerConfig} docker buildx rm ${multiArchBuilderName} 2> /dev/null"
+	runCmdOnTarget "${removeMultiArchBuilderCmd}"
+fi
+
 if [ ${buildCmdExitCode} -eq 0 ]
 then
-	echo -e "\n${PASS_COLOR}Image successfully built!${NULL_COLOR}\n"
+	if [ ${DOCKER_VERBOSE} -eq 1 ] || [ ${FORCE_DOCKER_BUILD} -eq 1 ]
+	then
+		echo ""
+	fi
+	echo -e "${PASS_COLOR}Image successfully built!${NULL_COLOR}\n"
 else
 	echo -e "\n${FAIL_COLOR}Image building failed!${NULL_COLOR}\n"
 	doLogoutCmd
 	exit 1
-fi
-
-if [ "${PACKAGED_IMAGE_TAG}" = "${LATEST_TAG_VALUE}" ]
-then
-	OMIT_LATEST_TAG="1"
-fi
-
-if [ ${OMIT_LATEST_TAG} -eq 0 ]
-then
-	runCmdOnTarget "${tagCmd}"
-	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
-
-	# Avoid race condition between tag and push
-	checkLatestImageIsAlreadyAvailable="docker image inspect ${latestPackagedImage} > /dev/null 2>&1"
-	while ! runCmdOnTarget "${checkLatestImageIsAlreadyAvailable}"
-	do
-		sleep 1
-	done
-
-	echo -e "${INFO_COLOR}Tagged image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
-else
-	echo -e "${INFO_COLOR}Omit tagging image as ${DATA_COLOR}${LATEST_TAG_VALUE}${INFO_COLOR}!${NULL_COLOR}"
-fi
-
-if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
-then
-	# Avoid race condition between build and push
-	checkPAckagedImageIsAlreadyAvailable="docker image inspect ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} > /dev/null 2>&1"
-	while ! runCmdOnTarget "${checkPAckagedImageIsAlreadyAvailable}"
-	do
-		sleep 1
-	done
-
-	echo -e "\n${INFO_COLOR}Pushing image to registry ..${NULL_COLOR}\n"
-	if runCmdOnTarget "${pushCmd}"
-	then
-		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}\n"
-	else
-		echo -e "\n${FAIL_COLOR}Image push failed!${NULL_COLOR}\n"
-		doLogoutCmd
-		exit 1
-	fi
-else
-	echo -e "\n${INFO_COLOR}Omit image pushing!${NULL_COLOR}\n"
 fi
 
 doLogoutCmd

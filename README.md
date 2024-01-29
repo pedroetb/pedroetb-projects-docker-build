@@ -6,6 +6,8 @@ You can use it to build (locally or remotely) your own Docker images, supporting
 
 Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example. For remote building `docker >= v23` is required, because `docker compose >= v2` plugin is needed. Will fallback to `docker build` alternative if outdated.
 
+Since `v2.1.0` multiarch building is supported too, without needing extra native hosts.
+
 ## Actions
 
 * **build**:
@@ -131,6 +133,7 @@ You may define these environment variables (**bold** are mandatory):
 | *DOCKER_BUILD_OPTS* | - | List of additional *docker build* options, used by both `docker compose build` and `docker build` alternatives. |
 | *DOCKER_VERBOSE* | `0` | Show full output of Docker operations (`build`, `pull` and `push`) when enabled. |
 | *DOCKERFILE_PATH* | `Dockerfile` | Path of `Dockerfile` file, relative to your project directories. Not valid when using `docker compose build` alternative. |
+| *ENABLE_MULTIARCH_BUILD* | `0` | Perform image building for multiple platform architectures at once. Valid for both `docker compose build` and `docker build`. When using `docker compose build`, this will be enabled automatically if `platforms` keyword is detected at compose file, building for these architectures. If `docker build` is used (actually, `docker buildx build`), you must enable this explicitly and will build for architectures defined by `MULTIARCH_PLATFORM_LIST`. |
 | *ENV_PREFIX* | `DBLD_` | Prefix used to identify variables to be defined in remote environment and service, available there without this prefix. Change this if default value collides with the beginning of your variable names. |
 | *ENV_SPACE_REPLACEMENT* | `<dbld-space>` | Unique string (change this if that is not true for you) used to replace spaces into variable values while handling them. |
 | *FORCE_DOCKER_BUILD* | `0` | Use always `docker build` alternative instead of `docker compose build`, even if *compose* configuration is available. |
@@ -138,6 +141,7 @@ You may define these environment variables (**bold** are mandatory):
 | *IMAGE_TAG_VARIABLE_NAME* | `IMAGE_TAG` | Value used as name of variable which will contain `PACKAGED_IMAGE_TAG` value at build process. Useful only for `docker compose build` alternative, to use this variable inside *compose* configuration file. |
 | *IMAGES_FOR_CACHING* | - | Docker images, separated by space, which should be pulled before building to provide contents for `cache_from` (at *compose* file for `docker compose build` ) or `--cache-from` (at command arguments for `docker build`). |
 | *LATEST_TAG_VALUE* | `latest` | Value used as Docker image tag, representing the most recent version of a Docker image. |
+| *MULTIARCH_PLATFORM_LIST* | `linux/amd64,linux/386,linux/arm64/v8,linux/arm/v7,linux/arm/v6` | Platform architectures used by multiarch building, only when building with `docker build` alternative (actually, `docker buildx build`). When using `docker compose build`, you must define `platforms` into `build` section at your compose file. |
 | *OMIT_IMAGE_PUSH* | `0` | Cancel image publication to Docker registry after a successful build. |
 | *OMIT_LATEST_TAG* | `0` | Do not tag image as `<LATEST_TAG_VALUE>` after a successful build. |
 | *PACKAGED_IMAGE_TAG* | `latest` | Tag of Docker image to be built (representing image version). It will be available at build environment as `<IMAGE_TAG_VARIABLE_NAME>`. |

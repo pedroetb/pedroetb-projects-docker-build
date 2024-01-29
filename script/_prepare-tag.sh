@@ -77,7 +77,6 @@ then
 		exit 1
 	fi
 
-	randomValue="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)"
 	remoteTagHome="${REMOTE_BUILD_PATH}/.${randomValue}"
 	setDockerConfig="DOCKER_CONFIG=${remoteTagHome}"
 

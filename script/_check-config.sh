@@ -13,6 +13,11 @@ do
 		then
 			anyBuildConfigFound=1
 		fi
+
+		if grep -q "^\s\+platforms:\$" ${composeFilePathItem}
+		then
+			ENABLE_MULTIARCH_BUILD=1
+		fi
 	else
 		echo -e "File ${DATA_COLOR}${composeFilePathItem}${INFO_COLOR} not found.${NULL_COLOR}\n"
 		anyComposeMissing=1
