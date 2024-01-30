@@ -21,7 +21,7 @@ stages:
   env | grep "^DOCKER_HUB_PASS=" | cut -d '=' -f 2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
 
 .create-multiarch-builder: &create-multiarch-builder |
-  docker buildx create --driver docker-container --name multiarch-builder --use > /dev/null
+  docker buildx create --driver docker-container --name multiarch-builder --use
 
 .docker-operations:
   extends: .dind-env
