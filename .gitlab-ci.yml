@@ -52,7 +52,6 @@ docker-build:
       docker compose
       --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
       build
-      -q
       --pull
       --push
       ${DOCKER_BUILD_ARGS};
