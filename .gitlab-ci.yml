@@ -20,6 +20,9 @@ stages:
 .docker-login-dockerhub: &docker-login-dockerhub |
   env | grep "^DOCKER_HUB_PASS=" | cut -d '=' -f 2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
 
+.create-multiarch-builder: &create-multiarch-builder |
+  docker buildx create --driver docker-container --name multiarch-builder --use > /dev/null
+
 .docker-operations:
   extends: .dind-env
   image: ${PACKAGING_IMAGE_NAME}:${PACKAGING_IMAGE_TAG}
@@ -40,6 +43,7 @@ docker-build:
     BUILDX_GIT_INFO: 'false'
   script:
     - *docker-login-gitlab
+    - *create-multiarch-builder
     - >
       VERSION=${CI_COMMIT_TAG:-${CI_COMMIT_SHORT_SHA}}
       COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
@@ -50,9 +54,12 @@ docker-build:
       build
       -q
       --pull
+      --push
       ${DOCKER_BUILD_ARGS};
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
-    - docker push -aq ${PACKAGED_IMAGE_NAME}
+    - >
+      docker buildx imagetools create
+      --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
+      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
   rules:
     - if: $CI_MERGE_REQUEST_ID ||
           $CI_PIPELINE_SOURCE == "schedule"
@@ -75,19 +82,23 @@ docker-tag-gitlab:
   extends: .docker-tag
   script:
     - *docker-login-gitlab
-    - docker pull -q ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${CI_REGISTRY_IMAGE}:${LATEST_TAG_VALUE}
-    - docker push -qa ${CI_REGISTRY_IMAGE}
+    - *create-multiarch-builder
+    - >
+      docker buildx imagetools create
+      --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+      --tag ${CI_REGISTRY_IMAGE}:${LATEST_TAG_VALUE}
+      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
 
 docker-tag-dockerhub:
   extends: .docker-tag
   script:
     - *docker-login-gitlab
     - *docker-login-dockerhub
-    - docker pull -q ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
+    - *create-multiarch-builder
     - dockerHubImagePath="$(echo ${CI_PROJECT_PATH} | cut -d '/' -f 2- | sed 's/\//-/g')"
     - dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}"
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:${CI_COMMIT_TAG}
-    - docker tag ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG} ${dockerHubImage}:${LATEST_TAG_VALUE}
-    - docker push -qa ${dockerHubImage}
+    - >
+      docker buildx imagetools create
+      --tag ${dockerHubImage}:${CI_COMMIT_TAG}
+      --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
+      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}

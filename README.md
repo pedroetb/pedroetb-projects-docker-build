@@ -6,7 +6,7 @@ You can use it to build (locally or remotely) your own Docker images, supporting
 
 Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example. For remote building `docker >= v23` is required, because `docker compose >= v2` plugin is needed. Will fallback to `docker build` alternative if outdated.
 
-Since `v2.1.0` multiarch building is supported too, without needing extra native hosts.
+Since `v2.1.0` multiarch Docker building and tagging is supported too, without needing extra native hosts.
 
 ## Actions
 

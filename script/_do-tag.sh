@@ -76,7 +76,7 @@ then
 
 	if [ ${OMIT_IMAGE_PUSH} -eq 1 ]
 	then
-		echo -e "${INFO_COLOR}When image push is omitted for multi-arch tag, resulting images are only shown!${NULL_COLOR}\n"
+		echo -e "${INFO_COLOR}When image push is omitted for multi-arch tagging, it only shows resulting image manifest at output!${NULL_COLOR}\n"
 		multiArchTagOpts="${multiArchTagOpts} --dry-run"
 	fi
 
@@ -95,7 +95,7 @@ then
 
 	if [ ${multiArchTagCmdExitCode} -eq 0 ]
 	then
-		if [ ${DOCKER_VERBOSE} -eq 1 ]
+		if [ ${DOCKER_VERBOSE} -eq 1 ] || [ ${OMIT_IMAGE_PUSH} -eq 1 ]
 		then
 			echo ""
 		fi
