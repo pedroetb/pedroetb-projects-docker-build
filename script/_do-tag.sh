@@ -40,16 +40,6 @@ doLogoutCmd() {
 	eval "${removeTagEnvFile}"
 }
 
-pullCmd="${setDockerConfig} docker pull ${dockerPushPullOpts} ${SOURCE_IMAGE}"
-
-tagCmd="docker tag ${SOURCE_IMAGE} ${TARGET_IMAGE}"
-tagLatestCmd="docker tag ${SOURCE_IMAGE} ${targetImageName}:${LATEST_TAG_VALUE}"
-
-pushBaseCmd="${setDockerConfig} docker push ${dockerPushPullOpts}"
-pushOriginalTagCmd="${pushBaseCmd} ${TARGET_IMAGE}"
-pushLatestTagCmd="${pushBaseCmd} ${targetImageName}:${LATEST_TAG_VALUE}"
-pushCmd="${pushOriginalTagCmd}"
-
 if [ ! -z "${SOURCE_REGISTRY_USER}" ] && [ ! -z "${SOURCE_REGISTRY_PASS}" ]
 then
 	echo -e "${INFO_COLOR}Login to source registry ${DATA_COLOR}${SOURCE_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
@@ -62,82 +52,148 @@ then
 	fi
 fi
 
-if runCmdOnTarget "${pullCmd}"
+if [ ${ENABLE_MULTIARCH_TAG} -eq 1 ]
 then
-	# Avoid race condition between pull and tag
-	checkSourceImageIsAlreadyAvailable="docker image inspect ${SOURCE_IMAGE} > /dev/null 2>&1"
-	while ! runCmdOnTarget "${checkSourceImageIsAlreadyAvailable}"
-	do
-		sleep 1
-	done
-	echo -e "\n${PASS_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${PASS_COLOR} successfully pulled${NULL_COLOR}\n"
-else
-	echo -e "\n${FAIL_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${FAIL_COLOR} pull failed!${NULL_COLOR}\n"
-	doLogoutCmd
-	exit 1
-fi
+	echo -e "${INFO_COLOR}Multi-arch tag is enabled!${NULL_COLOR}\n"
 
-if runCmdOnTarget "${tagCmd}"
-then
-	echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${targetImageTag}${NULL_COLOR}\n"
-else
-	echo -e "\n${FAIL_COLOR}Image ${DATA_COLOR}${targetImageName}${FAIL_COLOR} tagging failed!${NULL_COLOR}\n"
-	doLogoutCmd
-	exit 1
-fi
+	multiArchTaggerName="dbld-multiarch-tagger-${randomValue}"
 
-if [ ${OMIT_LATEST_TAG} -eq 0 ]
-then
-	pushCmd="${pushCmd} && ${pushLatestTagCmd}"
+	createMultiArchTaggerCmd="${setDockerConfig} docker buildx create \
+		--driver docker-container \
+		--name ${multiArchTaggerName} \
+		--use > /dev/null"
 
-	if runCmdOnTarget "${tagLatestCmd}"
+	runCmdOnTarget "${createMultiArchTaggerCmd}"
+
+	multiArchTags="${targetImageTag}"
+	multiArchTagOpts="--tag ${TARGET_IMAGE}"
+
+	if [ ${OMIT_LATEST_TAG} -eq 0 ]
 	then
-		# Avoid race condition between tag and push
-		checkLatestImageIsAlreadyAvailable="docker image inspect ${targetImageName}:${LATEST_TAG_VALUE} > /dev/null 2>&1"
-		while ! runCmdOnTarget "${checkLatestImageIsAlreadyAvailable}"
+		multiArchTags="${multiArchTags}, ${LATEST_TAG_VALUE}"
+		multiArchTagOpts="${multiArchTagOpts} --tag ${targetImageName}:${LATEST_TAG_VALUE}"
+	fi
+
+	if [ ${OMIT_IMAGE_PUSH} -eq 1 ]
+	then
+		echo -e "${INFO_COLOR}When image push is omitted for multi-arch tag, resulting images are only shown!${NULL_COLOR}\n"
+		multiArchTagOpts="${multiArchTagOpts} --dry-run"
+	fi
+
+	multiArchTagCmd="docker buildx imagetools create ${multiArchTagOpts} ${SOURCE_IMAGE}"
+
+	if [ ${DOCKER_VERBOSE} -eq 0 ]
+	then
+		multiArchTagCmd="${multiArchTagCmd} 2> /dev/null"
+	fi
+
+	runCmdOnTarget "${multiArchTagCmd}"
+	multiArchTagCmdExitCode=${?}
+
+	removeMultiArchTaggerCmd="${setDockerConfig} docker buildx rm ${multiArchTaggerName} 2> /dev/null"
+	runCmdOnTarget "${removeMultiArchTaggerCmd}"
+
+	if [ ${multiArchTagCmdExitCode} -eq 0 ]
+	then
+		if [ ${DOCKER_VERBOSE} -eq 1 ]
+		then
+			echo ""
+		fi
+
+		echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${multiArchTags}${PASS_COLOR} for multiple architectures!${NULL_COLOR}\n"
+	else
+		echo -e "\n${FAIL_COLOR}Image ${DATA_COLOR}${targetImageName}${FAIL_COLOR} tagging for multiple architectures failed!${NULL_COLOR}\n"
+		doLogoutCmd
+		exit 1
+	fi
+else
+	pullCmd="${setDockerConfig} docker pull ${dockerPushPullOpts} ${SOURCE_IMAGE}"
+
+	tagCmd="docker tag ${SOURCE_IMAGE} ${TARGET_IMAGE}"
+	tagLatestCmd="docker tag ${SOURCE_IMAGE} ${targetImageName}:${LATEST_TAG_VALUE}"
+
+	pushBaseCmd="${setDockerConfig} docker push ${dockerPushPullOpts}"
+	pushOriginalTagCmd="${pushBaseCmd} ${TARGET_IMAGE}"
+	pushLatestTagCmd="${pushBaseCmd} ${targetImageName}:${LATEST_TAG_VALUE}"
+	pushCmd="${pushOriginalTagCmd}"
+
+	if runCmdOnTarget "${pullCmd}"
+	then
+		# Avoid race condition between pull and tag
+		checkSourceImageIsAlreadyAvailable="docker image inspect ${SOURCE_IMAGE} > /dev/null 2>&1"
+		while ! runCmdOnTarget "${checkSourceImageIsAlreadyAvailable}"
 		do
 			sleep 1
 		done
+		echo -e "\n${PASS_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${PASS_COLOR} successfully pulled${NULL_COLOR}\n"
+	else
+		echo -e "\n${FAIL_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${FAIL_COLOR} pull failed!${NULL_COLOR}\n"
+		doLogoutCmd
+		exit 1
+	fi
 
-		echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${LATEST_TAG_VALUE}${NULL_COLOR}\n"
+	if runCmdOnTarget "${tagCmd}"
+	then
+		echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${targetImageTag}${NULL_COLOR}\n"
 	else
 		echo -e "\n${FAIL_COLOR}Image ${DATA_COLOR}${targetImageName}${FAIL_COLOR} tagging failed!${NULL_COLOR}\n"
 		doLogoutCmd
 		exit 1
 	fi
-fi
 
-if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
-then
-	if [ ! -z "${TARGET_REGISTRY_USER}" ] && [ ! -z "${TARGET_REGISTRY_PASS}" ]
+	if [ ${OMIT_LATEST_TAG} -eq 0 ]
 	then
-		if [ "${TARGET_REGISTRY_USER}" != "${SOURCE_REGISTRY_USER}" ] || [ "${TARGET_REGISTRY_URL}" != "${SOURCE_REGISTRY_URL}" ]
+		pushCmd="${pushCmd} && ${pushLatestTagCmd}"
+
+		if runCmdOnTarget "${tagLatestCmd}"
 		then
-			echo -e "${INFO_COLOR}Login to target registry ${DATA_COLOR}${TARGET_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
-			if runCmdOnTarget "${loginTargetCmd}"
-			then
-				loggedInTarget="1"
-				echo -e "\n${PASS_COLOR}Login to target registry was successful!${NULL_COLOR}\n"
-			else
-				echo -e "\n${FAIL_COLOR}Login to target registry failed!${NULL_COLOR}\n"
-			fi
+			# Avoid race condition between tag and push
+			checkLatestImageIsAlreadyAvailable="docker image inspect ${targetImageName}:${LATEST_TAG_VALUE} > /dev/null 2>&1"
+			while ! runCmdOnTarget "${checkLatestImageIsAlreadyAvailable}"
+			do
+				sleep 1
+			done
+
+			echo -e "${PASS_COLOR}Image ${DATA_COLOR}${targetImageName}${PASS_COLOR} successfully tagged as ${DATA_COLOR}${LATEST_TAG_VALUE}${NULL_COLOR}\n"
+		else
+			echo -e "\n${FAIL_COLOR}Image ${DATA_COLOR}${targetImageName}${FAIL_COLOR} tagging failed!${NULL_COLOR}\n"
+			doLogoutCmd
+			exit 1
 		fi
 	fi
 
-	# Avoid race condition between tag and push
-	checkTargetImageIsAlreadyAvailable="docker image inspect ${TARGET_IMAGE} > /dev/null 2>&1"
-	while ! runCmdOnTarget "${checkTargetImageIsAlreadyAvailable}"
-	do
-		sleep 1
-	done
-
-	if runCmdOnTarget "${pushCmd}"
+	if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
 	then
-		echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}\n"
-	else
-		echo -e "\n${FAIL_COLOR}Image push failed!${NULL_COLOR}\n"
-		doLogoutCmd
-		exit 1
+		if [ ! -z "${TARGET_REGISTRY_USER}" ] && [ ! -z "${TARGET_REGISTRY_PASS}" ]
+		then
+			if [ "${TARGET_REGISTRY_USER}" != "${SOURCE_REGISTRY_USER}" ] || [ "${TARGET_REGISTRY_URL}" != "${SOURCE_REGISTRY_URL}" ]
+			then
+				echo -e "${INFO_COLOR}Login to target registry ${DATA_COLOR}${TARGET_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
+				if runCmdOnTarget "${loginTargetCmd}"
+				then
+					loggedInTarget="1"
+					echo -e "\n${PASS_COLOR}Login to target registry was successful!${NULL_COLOR}\n"
+				else
+					echo -e "\n${FAIL_COLOR}Login to target registry failed!${NULL_COLOR}\n"
+				fi
+			fi
+		fi
+
+		# Avoid race condition between tag and push
+		checkTargetImageIsAlreadyAvailable="docker image inspect ${TARGET_IMAGE} > /dev/null 2>&1"
+		while ! runCmdOnTarget "${checkTargetImageIsAlreadyAvailable}"
+		do
+			sleep 1
+		done
+
+		if runCmdOnTarget "${pushCmd}"
+		then
+			echo -e "\n${PASS_COLOR}Image successfully pushed!${NULL_COLOR}\n"
+		else
+			echo -e "\n${FAIL_COLOR}Image push failed!${NULL_COLOR}\n"
+			doLogoutCmd
+			exit 1
+		fi
 	fi
 fi
 
