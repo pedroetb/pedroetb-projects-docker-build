@@ -52,6 +52,24 @@ then
 	fi
 fi
 
+if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
+then
+	if [ ! -z "${TARGET_REGISTRY_USER}" ] && [ ! -z "${TARGET_REGISTRY_PASS}" ]
+	then
+		if [ "${TARGET_REGISTRY_USER}" != "${SOURCE_REGISTRY_USER}" ] || [ "${TARGET_REGISTRY_URL}" != "${SOURCE_REGISTRY_URL}" ]
+		then
+			echo -e "${INFO_COLOR}Login to target registry ${DATA_COLOR}${TARGET_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
+			if runCmdOnTarget "${loginTargetCmd}"
+			then
+				loggedInTarget="1"
+				echo -e "\n${PASS_COLOR}Login to target registry was successful!${NULL_COLOR}\n"
+			else
+				echo -e "\n${FAIL_COLOR}Login to target registry failed!${NULL_COLOR}\n"
+			fi
+		fi
+	fi
+fi
+
 if [ ${ENABLE_MULTIARCH_TAG} -eq 1 ]
 then
 	echo -e "${INFO_COLOR}Multi-arch tag is enabled!${NULL_COLOR}\n"
@@ -164,21 +182,6 @@ else
 
 	if [ ${OMIT_IMAGE_PUSH} -eq 0 ]
 	then
-		if [ ! -z "${TARGET_REGISTRY_USER}" ] && [ ! -z "${TARGET_REGISTRY_PASS}" ]
-		then
-			if [ "${TARGET_REGISTRY_USER}" != "${SOURCE_REGISTRY_USER}" ] || [ "${TARGET_REGISTRY_URL}" != "${SOURCE_REGISTRY_URL}" ]
-			then
-				echo -e "${INFO_COLOR}Login to target registry ${DATA_COLOR}${TARGET_REGISTRY_URL:-<default>}${INFO_COLOR} ..${NULL_COLOR}\n"
-				if runCmdOnTarget "${loginTargetCmd}"
-				then
-					loggedInTarget="1"
-					echo -e "\n${PASS_COLOR}Login to target registry was successful!${NULL_COLOR}\n"
-				else
-					echo -e "\n${FAIL_COLOR}Login to target registry failed!${NULL_COLOR}\n"
-				fi
-			fi
-		fi
-
 		# Avoid race condition between tag and push
 		checkTargetImageIsAlreadyAvailable="docker image inspect ${TARGET_IMAGE} > /dev/null 2>&1"
 		while ! runCmdOnTarget "${checkTargetImageIsAlreadyAvailable}"
