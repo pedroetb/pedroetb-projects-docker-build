@@ -127,7 +127,7 @@ then
 
 	if [ ${OMIT_IMAGE_PUSH} -eq 1 ]
 	then
-		echo -e "${INFO_COLOR}Image push omitted for multi-arch tagging, showing resulting image manifest only ..${NULL_COLOR}\n"
+		echo -e "${INFO_COLOR}Image push omitted for multi-arch tagging, showing resultant image manifest only ..${NULL_COLOR}\n"
 		multiArchTagOpts="${multiArchTagOpts} --dry-run"
 	fi
 

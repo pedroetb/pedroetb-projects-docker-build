@@ -126,7 +126,7 @@ then
 
 	if [ ${OMIT_IMAGE_PUSH} -eq 1 ]
 	then
-		echo -e "${INFO_COLOR}When image push is omitted for multi-arch build, resulting images are stored only at build cache!${NULL_COLOR}\n"
+		echo -e "${INFO_COLOR}When image push is omitted for multi-arch build, resultant images are stored only at build cache!${NULL_COLOR}\n"
 	fi
 
 	createMultiArchBuilderCmd="${setDockerConfig} docker buildx create \

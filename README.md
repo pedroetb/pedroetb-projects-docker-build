@@ -6,7 +6,7 @@ You can use it to build (locally or remotely) your own Docker images, supporting
 
 Support remote actions, connecting through SSH to other machines. This is useful to build Docker images for different architectures natively, for example. For remote building `docker >= v23` is required, because `docker compose >= v2` plugin is needed. Will fallback to `docker build` alternative if outdated.
 
-Since `v2.1.0` multiarch Docker building and tagging is supported too, without needing extra native hosts.
+Since `v2.1.0` multiarch Docker building and tagging is supported too, without needing extra native hosts. For building, you can declare platforms at your compose file and multi-arch will be enabled automatically (or you can set it explicitly if not using compose file). For tagging, source Docker image manifest will be checked to preserve multi-arch at resultant image tag automatically (or you can force using only current platform architecture for new image tag).
 
 ## Actions
 
@@ -80,7 +80,7 @@ Since `v2.1.0` multiarch Docker building and tagging is supported too, without n
 
   1. **do-tag**:
 
-     Login to registries, pull source image, apply new tag and push the result.
+     Login to registries, check source image, apply new tag and push the result.
 
 * **flatten**:
 
