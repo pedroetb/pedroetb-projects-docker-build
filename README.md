@@ -163,7 +163,7 @@ You may define these environment variables (**bold** are mandatory):
 | **SOURCE_IMAGE** | - | Identification (`<name:tag>`) of Docker image to use as source. Can be provided as first argument too. |
 | **TARGET_IMAGE** | - | Identification (`<name:tag>`) of Docker image to use as target. Can be provided as second argument too. |
 | *DOCKER_VERBOSE* | `0` | Show full output of Docker operations (`build`, `pull` and `push`) when enabled. |
-| *ENABLE_MULTIARCH_TAG* | `0` | Perform image tagging preserving original image manifest, incuding all platform architectures included. When disabled, only current architecture (where docker-build is running) of Docker image will be tagged. |
+| *FORCE_SINGLEARCH_TAG* | `0` | Perform image tagging without preserving original image manifest for multi-arch source images, incuding only current platform architecture (where docker-build is running) for new tag. When disabled, all platform architectures found at source image manifest are included for new tag. |
 | *LATEST_TAG_VALUE* | `latest` | Value used as Docker image tag, representing the most recent version of a Docker image. |
 | *OMIT_IMAGE_PUSH* | `0` | Cancel image publication to Docker registry after a successful tag. |
 | *OMIT_LATEST_TAG* | `0` | Do not tag image as `<LATEST_TAG_VALUE>` after a successful tag. |

@@ -70,10 +70,43 @@ then
 	fi
 fi
 
-if [ ${ENABLE_MULTIARCH_TAG} -eq 1 ]
-then
-	echo -e "${INFO_COLOR}Multi-arch tag is enabled!${NULL_COLOR}\n"
+echo -e "${INFO_COLOR}Checking multi-arch availability for source image ..${NULL_COLOR}"
 
+enableMultiArchTagging=0
+
+getSourceImageMediaTypeCmd="${setDockerConfig} docker buildx imagetools inspect \
+	--format '{{json .Manifest.MediaType}}' \
+	${SOURCE_IMAGE} | tr -d '\"'"
+
+sourceImageMediaType=$(runCmdOnTarget "${getSourceImageMediaTypeCmd}")
+getSourceImageMediaTypeCmdExitCode=${?}
+
+if [ ${getSourceImageMediaTypeCmdExitCode} -eq 0 ]
+then
+	if [ ${sourceImageMediaType} = "application/vnd.docker.distribution.manifest.list.v2+json" ] || [ ${sourceImageMediaType} = "application/vnd.oci.image.index.v1+json" ]
+	then
+		echo -e "  ${INFO_COLOR}detected multi-arch source image manifest!${NULL_COLOR}"
+		echo -e "  ${INFO_COLOR}mediaType: ${DATA_COLOR}${sourceImageMediaType}${INFO_COLOR}${NULL_COLOR}"
+		if [ ${FORCE_SINGLEARCH_TAG} -eq 0 ]
+		then
+			enableMultiArchTagging=1
+			echo -e "  ${INFO_COLOR}enabling multi-arch tagging!${NULL_COLOR}"
+		else
+			echo -e "  ${INFO_COLOR}single-arch tagging is forced, disabling multi-arch tagging!${NULL_COLOR}"
+		fi
+	else
+		echo -e "  ${INFO_COLOR}detected single-arch source image manifest!${NULL_COLOR}"
+		echo -e "  ${INFO_COLOR}mediaType: ${DATA_COLOR}${sourceImageMediaType}${INFO_COLOR}${NULL_COLOR}"
+		echo -e "  ${INFO_COLOR}disabling multi-arch tagging!${NULL_COLOR}"
+	fi
+
+	echo ""
+else
+	echo -e "\n${FAIL_COLOR}Getting source image manifest from registry failed, disabling multi-arch tagging!${NULL_COLOR}\n"
+fi
+
+if [ ${enableMultiArchTagging} -eq 1 ]
+then
 	multiArchTaggerName="dbld-multiarch-tagger-${randomValue}"
 
 	createMultiArchTaggerCmd="${setDockerConfig} docker buildx create \
@@ -94,7 +127,7 @@ then
 
 	if [ ${OMIT_IMAGE_PUSH} -eq 1 ]
 	then
-		echo -e "${INFO_COLOR}When image push is omitted for multi-arch tagging, it only shows resulting image manifest at output!${NULL_COLOR}\n"
+		echo -e "${INFO_COLOR}Image push omitted for multi-arch tagging, showing resulting image manifest only ..${NULL_COLOR}\n"
 		multiArchTagOpts="${multiArchTagOpts} --dry-run"
 	fi
 
@@ -127,6 +160,11 @@ then
 else
 	pullCmd="${setDockerConfig} docker pull ${dockerPushPullOpts} ${SOURCE_IMAGE}"
 
+	if [ ${DOCKER_VERBOSE} -eq 0 ]
+	then
+		pullCmd="${pullCmd} > /dev/null"
+	fi
+
 	tagCmd="docker tag ${SOURCE_IMAGE} ${TARGET_IMAGE}"
 	tagLatestCmd="docker tag ${SOURCE_IMAGE} ${targetImageName}:${LATEST_TAG_VALUE}"
 
@@ -143,7 +181,13 @@ else
 		do
 			sleep 1
 		done
-		echo -e "\n${PASS_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${PASS_COLOR} successfully pulled${NULL_COLOR}\n"
+
+		if [ ${DOCKER_VERBOSE} -eq 1 ]
+		then
+			echo ""
+		fi
+
+		echo -e "${PASS_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${PASS_COLOR} successfully pulled${NULL_COLOR}\n"
 	else
 		echo -e "\n${FAIL_COLOR}Source image ${DATA_COLOR}${SOURCE_IMAGE}${FAIL_COLOR} pull failed!${NULL_COLOR}\n"
 		doLogoutCmd
