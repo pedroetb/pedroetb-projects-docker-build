@@ -10,8 +10,10 @@ then
 	then
 		echo -e "  ${INFO_COLOR}source registry host not found, using Docker Hub as default. You can define it with 'SOURCE_REGISTRY_URL'.${NULL_COLOR}"
 	else
-		echo -e "  ${INFO_COLOR}source registry host set!${NULL_COLOR}"
+		echo -e "  ${PASS_COLOR}source registry host set!${NULL_COLOR}"
 	fi
+else
+	echo -e "  ${PASS_COLOR}source registry host set!${NULL_COLOR}"
 fi
 
 if [ -z "${SOURCE_REGISTRY_USER}" ]
@@ -30,7 +32,7 @@ if [ -z "${SOURCE_REGISTRY_USER}" ] || [ -z "${SOURCE_REGISTRY_PASS}" ]
 then
 	echo -e "  ${INFO_COLOR}Docker pull will be anonymous, because registry credentials for source were not found. You can define them with 'SOURCE_REGISTRY_USER' and 'SOURCE_REGISTRY_PASS'.${NULL_COLOR}\n"
 else
-	echo -e "  ${INFO_COLOR}source registry credentials set!${NULL_COLOR}\n"
+	echo -e "  ${PASS_COLOR}source registry credentials set!${NULL_COLOR}\n"
 fi
 
 echo -e "${INFO_COLOR}Preparing target Docker registry access ..${NULL_COLOR}"
@@ -43,8 +45,10 @@ then
 	then
 		echo -e "  ${INFO_COLOR}target registry host not found, using Docker Hub as default. You can define it with 'TARGET_REGISTRY_URL'.${NULL_COLOR}"
 	else
-		echo -e "  ${INFO_COLOR}target registry host set!${NULL_COLOR}"
+		echo -e "  ${PASS_COLOR}target registry host set!${NULL_COLOR}"
 	fi
+else
+	echo -e "  ${PASS_COLOR}target registry host set!${NULL_COLOR}"
 fi
 
 if [ -z "${TARGET_REGISTRY_USER}" ]
@@ -64,5 +68,5 @@ then
 	echo -e "  ${INFO_COLOR}Docker push will be omitted, because registry credentials for target were not found. You can define them with 'TARGET_REGISTRY_USER' and 'TARGET_REGISTRY_PASS'.${NULL_COLOR}\n"
 	OMIT_IMAGE_PUSH="1"
 else
-	echo -e "  ${INFO_COLOR}target registry credentials set!${NULL_COLOR}\n"
+	echo -e "  ${PASS_COLOR}target registry credentials set!${NULL_COLOR}\n"
 fi

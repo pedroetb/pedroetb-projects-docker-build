@@ -54,9 +54,9 @@ else
 
 	if docker compose --env-file "${envBuildFilePath}" config -q
 	then
-		echo -e "${PASS_COLOR}Valid compose configuration!${NULL_COLOR}"
+		echo -e "  ${PASS_COLOR}valid compose configuration!${NULL_COLOR}"
 	else
-		echo -e "${FAIL_COLOR}Invalid compose configuration!${NULL_COLOR}"
+		echo -e "  ${FAIL_COLOR}invalid compose configuration!${NULL_COLOR}"
 		eval "${removeBuildEnvFile}"
 		exit 1
 	fi
