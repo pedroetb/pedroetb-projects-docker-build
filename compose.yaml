@@ -5,7 +5,8 @@ services:
       context: ${BUILD_CONTEXT:-.}
       dockerfile: ${DOCKERFILE:-Dockerfile}
       args:
-        DOCKER_VERSION:
+        PARENT_IMAGE_NAME:
+        PARENT_IMAGE_TAG:
         OPENSSH_VERSION:
         VERSION:
       platforms:

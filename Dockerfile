@@ -1,6 +1,7 @@
-ARG DOCKER_VERSION
+ARG PARENT_IMAGE_NAME=docker \
+	PARENT_IMAGE_TAG=latest
 
-FROM docker:${DOCKER_VERSION}
+FROM ${PARENT_IMAGE_NAME}:${PARENT_IMAGE_TAG}
 
 LABEL maintainer="pedroetb@gmail.com"
 
