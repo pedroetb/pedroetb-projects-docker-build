@@ -146,13 +146,13 @@ then
 		build \
 		${dockerDefaultBuildOpts} \
 		${DOCKER_BUILD_OPTS} \
-		${BUILD_SERVICE_NAME};"
+		${BUILD_SERVICE_NAME}"
 
 	buildCmd="${buildCmd} ${dockerComposeCmd}"
 
 	if [ ${OMIT_LATEST_TAG} -eq 0 ]
 	then
-		buildCmd="${buildCmd} \
+		buildCmd="${buildCmd} && \
 			${IMAGE_TAG_VARIABLE_NAME}=${LATEST_TAG_VALUE} \
 			${dockerComposeCmd}"
 	fi
