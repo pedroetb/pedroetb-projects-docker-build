@@ -31,7 +31,6 @@ stages:
     PACKAGING_IMAGE_TAG: latest
     PACKAGED_IMAGE_NAME: ${CI_REGISTRY_IMAGE}
     PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
-    LATEST_TAG_VALUE: ${CI_COMMIT_REF_SLUG}
 
 docker-build:
   extends: .docker-operations
@@ -41,6 +40,7 @@ docker-build:
     COMPOSE_ENV_FILE_NAME: .env
     COMPOSE_PROJECT_DIRECTORY: '.'
     BUILDX_GIT_INFO: 'false'
+    LATEST_TAG_VALUE: ${CI_COMMIT_REF_SLUG}
   script:
     - *docker-login-gitlab
     - *create-multiarch-builder
@@ -59,13 +59,14 @@ docker-build:
     - >
       docker buildx imagetools create
       --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
+      --progress none
       ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
   rules:
     - if: $CI_MERGE_REQUEST_ID ||
-          $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_COMMIT_BRANCH ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
           $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH
 
 # Temporary fix until resolved at template level
 container_scanning:
@@ -95,6 +96,7 @@ docker-tag-gitlab:
       docker buildx imagetools create
       --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
       --tag ${CI_REGISTRY_IMAGE}:${LATEST_TAG_VALUE}
+      --progress none
       ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
 
 docker-tag-dockerhub:
@@ -109,4 +111,5 @@ docker-tag-dockerhub:
       docker buildx imagetools create
       --tag ${dockerHubImage}:${CI_COMMIT_TAG}
       --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
+      --progress none
       ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
