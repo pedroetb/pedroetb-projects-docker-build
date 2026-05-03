@@ -31,7 +31,7 @@ stages:
     PACKAGING_IMAGE_TAG: latest
     PACKAGED_IMAGE_NAME: ${CI_REGISTRY_IMAGE}
     PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
-    IMAGETOOLS_CREATE_PROGRESS: tty
+    IMAGETOOLS_CREATE_PROGRESS: none
 
 docker-build:
   extends: .docker-operations
