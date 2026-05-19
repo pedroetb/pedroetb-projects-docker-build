@@ -23,94 +23,89 @@ stages:
 .create-multiarch-builder: &create-multiarch-builder |
   docker buildx create --driver docker-container --name multiarch-builder --use > /dev/null
 
-.docker-operations:
+.docker-compose-build: &docker-compose-build >
+  COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
+  IMAGE_NAME=${PACKAGED_IMAGE_NAME}
+  IMAGE_TAG=${PACKAGED_IMAGE_TAG}
+  docker compose
+  --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
+  build
+  -q
+  --pull
+  --push
+  ${DOCKER_BUILD_ARGS};
+
+.docker-build:
   extends: .dind-env
+  stage: package
   image: ${PACKAGING_IMAGE_NAME}:${PACKAGING_IMAGE_TAG}
   variables:
     PACKAGING_IMAGE_NAME: docker
     PACKAGING_IMAGE_TAG: latest
     PACKAGED_IMAGE_NAME: ${CI_REGISTRY_IMAGE}
-    PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     IMAGETOOLS_CREATE_PROGRESS: none
-
-docker-build:
-  extends: .docker-operations
-  stage: package
-  variables:
     COMPOSE_FILE_NAME: compose.yaml
     COMPOSE_ENV_FILE_NAME: .env
     COMPOSE_PROJECT_DIRECTORY: '.'
     BUILDX_GIT_INFO: 'false'
+
+.docker-branch:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+.docker-tag:
+  rules:
+    - if: $CI_COMMIT_TAG &&
+          $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+.*/i
+
+docker-build-branch:
+  extends:
+    - .docker-build
+    - .docker-branch
+  variables:
+    PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     LATEST_TAG_VALUE: ${CI_COMMIT_REF_SLUG}
+    VERSION: ${CI_COMMIT_SHORT_SHA}
   script:
     - *docker-login-gitlab
     - *create-multiarch-builder
-    - >
-      VERSION=${CI_COMMIT_TAG:-${CI_COMMIT_SHORT_SHA}}
-      COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
-      IMAGE_NAME=${PACKAGED_IMAGE_NAME}
-      IMAGE_TAG=${PACKAGED_IMAGE_TAG}
-      docker compose
-      --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
-      build
-      -q
-      --pull
-      --push
-      ${DOCKER_BUILD_ARGS};
+    - *docker-compose-build
     - >
       docker buildx imagetools create
       --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
       --progress ${IMAGETOOLS_CREATE_PROGRESS}
       ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
-  rules:
-    - if: $CI_MERGE_REQUEST_ID ||
-          $CI_PIPELINE_SOURCE == "schedule" ||
-          $CI_COMMIT_TAG
-      when: never
-    - if: $CI_COMMIT_BRANCH
+
+docker-build-tag:
+  extends:
+    - .docker-build
+    - .docker-tag
+  variables:
+    PACKAGED_IMAGE_TAG: ${CI_COMMIT_TAG}
+    LATEST_TAG_VALUE: latest
+    VERSION: ${CI_COMMIT_TAG}
+  script:
+    - *docker-login-gitlab
+    - *create-multiarch-builder
+    - *docker-compose-build
+    - *docker-login-dockerhub
+    - >
+      dockerHubImagePath="$(echo ${CI_PROJECT_PATH} | cut -d '/' -f 2- | sed 's/\//-/g')";
+      dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}"
+    - >
+      docker buildx imagetools create
+      --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
+      --tag ${dockerHubImage}:${CI_COMMIT_TAG}
+      --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
+      --progress ${IMAGETOOLS_CREATE_PROGRESS}
+      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
 
 # Temporary fix until resolved at template level
 container_scanning:
   variables:
     CI_APPLICATION_REPOSITORY: ${CI_REGISTRY_IMAGE}
     CI_APPLICATION_TAG: ${CI_COMMIT_SHORT_SHA}
-
-.docker-tag:
-  extends: .docker-operations
-  stage: post-package
-  dependencies: []
-  variables:
-    LATEST_TAG_VALUE: latest
-  rules:
-    - if: $CI_MERGE_REQUEST_ID ||
-          $CI_PIPELINE_SOURCE == "schedule" ||
-          $CI_COMMIT_BRANCH
-      when: never
-    - if: $CI_COMMIT_TAG
-
-docker-tag-gitlab:
-  extends: .docker-tag
-  script:
-    - *docker-login-gitlab
-    - *create-multiarch-builder
-    - >
-      docker buildx imagetools create
-      --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
-      --tag ${CI_REGISTRY_IMAGE}:${LATEST_TAG_VALUE}
-      --progress ${IMAGETOOLS_CREATE_PROGRESS}
-      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
-
-docker-tag-dockerhub:
-  extends: .docker-tag
-  script:
-    - *docker-login-gitlab
-    - *docker-login-dockerhub
-    - *create-multiarch-builder
-    - dockerHubImagePath="$(echo ${CI_PROJECT_PATH} | cut -d '/' -f 2- | sed 's/\//-/g')"
-    - dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}"
-    - >
-      docker buildx imagetools create
-      --tag ${dockerHubImage}:${CI_COMMIT_TAG}
-      --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
-      --progress ${IMAGETOOLS_CREATE_PROGRESS}
-      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
