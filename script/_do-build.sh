@@ -5,7 +5,6 @@ echo ""
 latestPackagedImage=${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
 dockerDefaultBuildOpts="--pull --force-rm"
 builderContextName="dbld-builder-context-${randomValue}"
-builderContextDockerOpts="${BUILDER_CONTEXT_DOCKER_OPTS:-host=tcp://docker:2376,ca=/certs/client/ca.pem,cert=/certs/client/cert.pem,key=/certs/client/key.pem}"
 multiArchBuilderName="dbld-multiarch-builder-${randomValue}"
 
 if [ ${DOCKER_VERBOSE} -eq 0 ]
@@ -132,7 +131,7 @@ then
 	fi
 
 	createBuilderContextCmd="${setDockerConfig} docker context create ${builderContextName} \
-		--docker \"${builderContextDockerOpts}\" > /dev/null"
+		--docker \"${BUILDER_CONTEXT_DOCKER_OPTS}\" > /dev/null"
 
 	runCmdOnTarget "${createBuilderContextCmd}"
 
