@@ -134,7 +134,7 @@ then
 	createBuilderContextCmd="${setDockerConfig} docker context create ${builderContextName} \
 		--docker \"${builderContextDockerOpts}\""
 
-	runCmdOnTarget "${createMultiArchBuilderCmd}"
+	runCmdOnTarget "${createBuilderContextCmd}"
 
 	createMultiArchBuilderCmd="${setDockerConfig} docker buildx create \
 		--driver docker-container \
