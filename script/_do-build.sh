@@ -5,6 +5,7 @@ echo ""
 latestPackagedImage=${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
 dockerDefaultBuildOpts="--pull --force-rm"
 builderContextName="dbld-builder-context-${randomValue}"
+builderContextDockerOpts="${BUILDER_CONTEXT_DOCKER_OPTS:-host=tcp://dind:2376}"
 multiArchBuilderName="dbld-multiarch-builder-${randomValue}"
 
 if [ ${DOCKER_VERBOSE} -eq 0 ]
@@ -130,7 +131,9 @@ then
 		echo -e "${INFO_COLOR}When image push is omitted for multi-arch build, resultant images are stored only at build cache!${NULL_COLOR}\n"
 	fi
 
-	createBuilderContextCmd="${setDockerConfig} docker context create ${builderContextName}"
+	createBuilderContextCmd="${setDockerConfig} docker context create \
+		--docker "${builderContextDockerOpts}" \
+		${builderContextName}"
 
 	runCmdOnTarget "${createMultiArchBuilderCmd}"
 
