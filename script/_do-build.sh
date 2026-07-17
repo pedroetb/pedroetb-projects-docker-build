@@ -4,6 +4,7 @@ echo ""
 
 latestPackagedImage=${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
 dockerDefaultBuildOpts="--pull --force-rm"
+builderContextName="dbld-builder-context-${randomValue}"
 multiArchBuilderName="dbld-multiarch-builder-${randomValue}"
 
 if [ ${DOCKER_VERBOSE} -eq 0 ]
@@ -129,10 +130,15 @@ then
 		echo -e "${INFO_COLOR}When image push is omitted for multi-arch build, resultant images are stored only at build cache!${NULL_COLOR}\n"
 	fi
 
+	createBuilderContextCmd="${setDockerConfig} docker context create ${builderContextName}"
+
+	runCmdOnTarget "${createMultiArchBuilderCmd}"
+
 	createMultiArchBuilderCmd="${setDockerConfig} docker buildx create \
 		--driver docker-container \
 		--name ${multiArchBuilderName} \
-		--use > /dev/null"
+		--use \
+		${builderContextName} > /dev/null"
 
 	runCmdOnTarget "${createMultiArchBuilderCmd}"
 fi
@@ -197,6 +203,8 @@ if [ ${ENABLE_MULTIARCH_BUILD} -eq 1 ]
 then
 	removeMultiArchBuilderCmd="${setDockerConfig} docker buildx rm ${multiArchBuilderName} 2> /dev/null"
 	runCmdOnTarget "${removeMultiArchBuilderCmd}"
+	removeBuilderContextCmd="${setDockerConfig} docker context rm ${builderContextName} 2> /dev/null"
+	runCmdOnTarget "${removeBuilderContextCmd}"
 fi
 
 if [ ${buildCmdExitCode} -eq 0 ]
