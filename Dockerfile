@@ -27,7 +27,8 @@ RUN \
 		fileName=$(basename "${filePath}"); \
 		ln -s "${filePath}" "${binPath}/${fileName}"; \
 		ln -s "${filePath}" "${binPath}/${fileName%.*}"; \
-	done
+	done \
+	echo '{"credsStore":"pass"}' > /root/.docker/config.json
 
 ARG VERSION
 
