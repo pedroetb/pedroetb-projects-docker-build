@@ -131,7 +131,7 @@ then
 	fi
 
 	createBuilderContextCmd="${setDockerConfig} docker context create ${builderContextName} \
-		--docker \"${BUILDER_CONTEXT_DOCKER_OPTS}\" > /dev/null"
+		--docker \"${BUILDER_CONTEXT_DOCKER_OPTS}\" > /dev/null 2>&1"
 
 	runCmdOnTarget "${createBuilderContextCmd}"
 
@@ -204,7 +204,7 @@ if [ ${ENABLE_MULTIARCH_BUILD} -eq 1 ]
 then
 	removeMultiArchBuilderCmd="${setDockerConfig} docker buildx rm ${multiArchBuilderName} 2> /dev/null"
 	runCmdOnTarget "${removeMultiArchBuilderCmd}"
-	removeBuilderContextCmd="${setDockerConfig} docker context rm ${builderContextName} 2> /dev/null"
+	removeBuilderContextCmd="${setDockerConfig} docker context rm ${builderContextName} > /dev/null 2>&1"
 	runCmdOnTarget "${removeBuilderContextCmd}"
 fi
 

@@ -111,7 +111,7 @@ then
 	multiArchTaggerName="dbld-multiarch-tagger-${randomValue}"
 
 	createTaggerContextCmd="${setDockerConfig} docker context create ${taggerContextName} \
-		--docker \"${BUILDER_CONTEXT_DOCKER_OPTS}\" > /dev/null"
+		--docker \"${BUILDER_CONTEXT_DOCKER_OPTS}\" > /dev/null 2>&1"
 
 	runCmdOnTarget "${createTaggerContextCmd}"
 
@@ -150,7 +150,7 @@ then
 
 	removeMultiArchTaggerCmd="${setDockerConfig} docker buildx rm ${multiArchTaggerName} 2> /dev/null"
 	runCmdOnTarget "${removeMultiArchTaggerCmd}"
-	removeTaggerContextCmd="${setDockerConfig} docker context rm ${taggerContextName} 2> /dev/null"
+	removeTaggerContextCmd="${setDockerConfig} docker context rm ${taggerContextName} > /dev/null 2>&1"
 	runCmdOnTarget "${removeTaggerContextCmd}"
 
 	if [ ${multiArchTagCmdExitCode} -eq 0 ]
