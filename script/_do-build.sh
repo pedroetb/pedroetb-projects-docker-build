@@ -144,7 +144,8 @@ then
 	runCmdOnTarget "${createMultiArchBuilderCmd}"
 fi
 
-buildCmd="${moveToBuildDirCmd}"
+buildCmd="${moveToBuildDirCmd} \
+	${setDockerConfig} docker pull ${dockerPushPullOpts} ${latestPackagedImage} || true;"
 
 if [ ${FORCE_DOCKER_BUILD} -eq 0 ]
 then
@@ -178,7 +179,6 @@ else
 	fi
 
 	buildCmd="${buildCmd} \
-		${setDockerConfig} docker pull ${dockerPushPullOpts} ${latestPackagedImage};
 		${setDockerConfig} docker ${multiArchEnabled:+buildx} build \
 			--cache-from ${latestPackagedImage} \
 			-f ${DOCKERFILE_PATH} \

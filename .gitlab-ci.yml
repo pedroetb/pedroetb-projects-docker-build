@@ -1,18 +1,16 @@
 include:
   - project: 'pedroetb-projects/gitlab-ci-templates'
-    ref: master
-    file: '/packaging-docker/_base.yml'
+    ref: main
+    file: '/build/docker/_docker.yml'
   - project: 'pedroetb-projects/gitlab-ci-templates'
-    ref: master
-    file: '/packaging-docker/dockerfile-linting.yml'
+    ref: main
+    file: '/build/docker/dockerfile-linting.yml'
   - project: 'pedroetb-projects/gitlab-ci-templates'
-    ref: master
-    file: '/scanning/container-scanning.yml'
-
-stages:
-  - pre-package
-  - package
-  - post-package
+    ref: main
+    file: '/test/container-scanning.yml'
+  - project: 'pedroetb-projects/gitlab-ci-templates'
+    ref: main
+    file: '/test/auto.yml'
 
 .docker-login-gitlab: &docker-login-gitlab |
   env | grep "^CI_JOB_TOKEN=" | cut -d '=' -f 2- | docker login -u gitlab-ci-token --password-stdin ${CI_REGISTRY}
@@ -22,6 +20,15 @@ stages:
 
 .create-multiarch-builder: &create-multiarch-builder |
   docker buildx create --driver docker-container --name multiarch-builder --use > /dev/null
+
+.docker-pull-latest: &docker-pull-latest >
+  dockerPullLatestExitCode=0;
+  docker pull -q
+  ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE} > /dev/null 2>&1 || dockerPullLatestExitCode=${?};
+  if [ ${dockerPullLatestExitCode} -eq 0 ];
+  then
+    echo "Image '${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}' found and pulled, using it for layers cache ..";
+  fi;
 
 .docker-compose-build: &docker-compose-build >
   COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
@@ -33,11 +40,10 @@ stages:
   -q
   --pull
   --push
-  ${DOCKER_BUILD_ARGS};
+  ${DOCKER_BUILD_ARGS}
 
 .docker-build:
   extends: .dind-env
-  stage: package
   image: ${PACKAGING_IMAGE_NAME}:${PACKAGING_IMAGE_TAG}
   variables:
     PACKAGING_IMAGE_NAME: docker
@@ -49,23 +55,10 @@ stages:
     COMPOSE_PROJECT_DIRECTORY: '.'
     BUILDX_GIT_INFO: 'false'
 
-.docker-branch:
-  rules:
-    - if: $CI_MERGE_REQUEST_ID ||
-          $CI_COMMIT_TAG ||
-          $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_COMMIT_BRANCH
-
-.docker-tag:
-  rules:
-    - if: $CI_COMMIT_TAG &&
-          $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+.*/i
-
-docker-build-branch:
+📦 docker-build:
   extends:
     - .docker-build
-    - .docker-branch
+    - .docker-branch-rules
   variables:
     PACKAGED_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
     LATEST_TAG_VALUE: ${CI_COMMIT_REF_SLUG}
@@ -73,6 +66,7 @@ docker-build-branch:
   script:
     - *docker-login-gitlab
     - *create-multiarch-builder
+    - *docker-pull-latest
     - *docker-compose-build
     - >
       docker buildx imagetools create
@@ -80,10 +74,10 @@ docker-build-branch:
       --progress ${IMAGETOOLS_CREATE_PROGRESS}
       ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
 
-docker-build-tag:
+🎁 docker-build:
   extends:
     - .docker-build
-    - .docker-tag
+    - .docker-tag-rules
   variables:
     PACKAGED_IMAGE_TAG: ${CI_COMMIT_TAG}
     LATEST_TAG_VALUE: latest
@@ -91,6 +85,7 @@ docker-build-tag:
   script:
     - *docker-login-gitlab
     - *create-multiarch-builder
+    - *docker-pull-latest
     - *docker-compose-build
     - *docker-login-dockerhub
     - >
@@ -103,9 +98,3 @@ docker-build-tag:
       --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
       --progress ${IMAGETOOLS_CREATE_PROGRESS}
       ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
-
-# Temporary fix until resolved at template level
-container_scanning:
-  variables:
-    CI_APPLICATION_REPOSITORY: ${CI_REGISTRY_IMAGE}
-    CI_APPLICATION_TAG: ${CI_COMMIT_SHORT_SHA}
