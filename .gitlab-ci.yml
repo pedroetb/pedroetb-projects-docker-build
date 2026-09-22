@@ -18,13 +18,16 @@ include:
 .docker-login-dockerhub: &docker-login-dockerhub |
   env | grep "^DOCKER_HUB_PASS=" | cut -d '=' -f 2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
 
-.create-multiarch-builder: &create-multiarch-builder |
-  docker buildx create --driver docker-container --name multiarch-builder --use > /dev/null
+.create-multiarch-builder: &create-multiarch-builder >
+  docker context create builder-context
+    --docker "host=tcp://docker:2376,ca=/certs/client/ca.pem,cert=/certs/client/cert.pem,key=/certs/client/key.pem"
+    > /dev/null 2>&1;
+  docker buildx create --driver docker-container --name multiarch-builder --use builder-context > /dev/null
 
 .docker-pull-latest: &docker-pull-latest >
   dockerPullLatestExitCode=0;
   docker pull -q
-  ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE} > /dev/null 2>&1 || dockerPullLatestExitCode=${?};
+    ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE} > /dev/null 2>&1 || dockerPullLatestExitCode=${?};
   if [ ${dockerPullLatestExitCode} -eq 0 ];
   then
     echo "Image '${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}' found and pulled, using it for layers cache ..";
@@ -35,12 +38,12 @@ include:
   IMAGE_NAME=${PACKAGED_IMAGE_NAME}
   IMAGE_TAG=${PACKAGED_IMAGE_TAG}
   docker compose
-  --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
-  build
-  -q
-  --pull
-  --push
-  ${DOCKER_BUILD_ARGS}
+    --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
+    build
+    -q
+    --pull
+    --push
+    ${DOCKER_BUILD_ARGS}
 
 .docker-build:
   extends: .dind-env
@@ -70,9 +73,9 @@ include:
     - *docker-compose-build
     - >
       docker buildx imagetools create
-      --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
-      --progress ${IMAGETOOLS_CREATE_PROGRESS}
-      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
+        --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
+        --progress ${IMAGETOOLS_CREATE_PROGRESS}
+        ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
 
 🎁 docker-build:
   extends:
@@ -90,11 +93,10 @@ include:
     - *docker-login-dockerhub
     - >
       dockerHubImagePath="$(echo ${CI_PROJECT_PATH} | cut -d '/' -f 2- | sed 's/\//-/g')";
-      dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}"
-    - >
+      dockerHubImage="${DOCKER_HUB_ROOT}/${dockerHubImagePath}";
       docker buildx imagetools create
-      --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
-      --tag ${dockerHubImage}:${CI_COMMIT_TAG}
-      --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
-      --progress ${IMAGETOOLS_CREATE_PROGRESS}
-      ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
+        --tag ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}
+        --tag ${dockerHubImage}:${CI_COMMIT_TAG}
+        --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
+        --progress ${IMAGETOOLS_CREATE_PROGRESS}
+        ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
