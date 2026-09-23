@@ -25,6 +25,39 @@ include:
     COMPOSE_PROJECT_DIRECTORY: '.'
     BUILDX_GIT_INFO: 'false'
 
+.docker-login-gitlab: &docker-login-gitlab |
+  env | grep "^CI_JOB_TOKEN=" | cut -d '=' -f 2- | docker login -u gitlab-ci-token --password-stdin ${CI_REGISTRY}
+
+.docker-login-dockerhub: &docker-login-dockerhub |
+  env | grep "^DOCKER_HUB_PASS=" | cut -d '=' -f 2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
+
+.create-multiarch-builder: &create-multiarch-builder >
+  docker context create builder-context
+  --docker "host=tcp://docker:2376,ca=/certs/client/ca.pem,cert=/certs/client/cert.pem,key=/certs/client/key.pem"
+  > /dev/null 2>&1;
+  docker buildx create --driver docker-container --name multiarch-builder --use builder-context > /dev/null
+
+.docker-pull-latest: &docker-pull-latest >
+  dockerPullLatestExitCode=0;
+  docker pull -q
+  ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE} > /dev/null 2>&1 || dockerPullLatestExitCode=${?};
+  if [ ${dockerPullLatestExitCode} -eq 0 ];
+  then
+  echo "Image '${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}' found and pulled, using it for layers cache ..";
+  fi
+
+.docker-compose-build: &docker-compose-build >
+  COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
+  IMAGE_NAME=${PACKAGED_IMAGE_NAME}
+  IMAGE_TAG=${PACKAGED_IMAGE_TAG}
+  docker compose
+  --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
+  build
+  -q
+  --pull
+  --push
+  ${DOCKER_BUILD_ARGS}
+
 📦 docker-build:
   extends:
     - .docker-build
@@ -67,36 +100,3 @@ include:
       --tag ${dockerHubImage}:${LATEST_TAG_VALUE}
       --progress ${IMAGETOOLS_CREATE_PROGRESS}
       ${PACKAGED_IMAGE_NAME}:${PACKAGED_IMAGE_TAG}
-
-.docker-login-gitlab: &docker-login-gitlab |
-  env | grep "^CI_JOB_TOKEN=" | cut -d '=' -f 2- | docker login -u gitlab-ci-token --password-stdin ${CI_REGISTRY}
-
-.docker-login-dockerhub: &docker-login-dockerhub |
-  env | grep "^DOCKER_HUB_PASS=" | cut -d '=' -f 2- | docker login -u ${DOCKER_HUB_USER} --password-stdin
-
-.create-multiarch-builder: &create-multiarch-builder >
-  docker context create builder-context
-  --docker "host=tcp://docker:2376,ca=/certs/client/ca.pem,cert=/certs/client/cert.pem,key=/certs/client/key.pem"
-  > /dev/null 2>&1;
-  docker buildx create --driver docker-container --name multiarch-builder --use builder-context > /dev/null
-
-.docker-pull-latest: &docker-pull-latest >
-  dockerPullLatestExitCode=0;
-  docker pull -q
-  ${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE} > /dev/null 2>&1 || dockerPullLatestExitCode=${?};
-  if [ ${dockerPullLatestExitCode} -eq 0 ];
-  then
-  echo "Image '${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}' found and pulled, using it for layers cache ..";
-  fi
-
-.docker-compose-build: &docker-compose-build >
-  COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
-  IMAGE_NAME=${PACKAGED_IMAGE_NAME}
-  IMAGE_TAG=${PACKAGED_IMAGE_TAG}
-  docker compose
-  --env-file ${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_ENV_FILE_NAME}
-  build
-  -q
-  --pull
-  --push
-  ${DOCKER_BUILD_ARGS}
