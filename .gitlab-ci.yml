@@ -22,7 +22,7 @@ include:
   docker context create builder-context
   --docker "host=tcp://docker:2376,ca=/certs/client/ca.pem,cert=/certs/client/cert.pem,key=/certs/client/key.pem"
   > /dev/null 2>&1;
-  docker buildx create --driver docker-container --name multiarch-builder --use builder-context > /dev/null;
+  docker buildx create --driver docker-container --name multiarch-builder --use builder-context > /dev/null
 
 .docker-pull-latest: &docker-pull-latest >
   dockerPullLatestExitCode=0;
@@ -31,7 +31,7 @@ include:
   if [ ${dockerPullLatestExitCode} -eq 0 ];
   then
   echo "Image '${PACKAGED_IMAGE_NAME}:${LATEST_TAG_VALUE}' found and pulled, using it for layers cache ..";
-  fi;
+  fi
 
 .docker-compose-build: &docker-compose-build >
   COMPOSE_FILE=${COMPOSE_PROJECT_DIRECTORY}/${COMPOSE_FILE_NAME}
@@ -43,7 +43,7 @@ include:
   -q
   --pull
   --push
-  ${DOCKER_BUILD_ARGS};
+  ${DOCKER_BUILD_ARGS}
 
 .docker-build:
   extends: .dind-env
